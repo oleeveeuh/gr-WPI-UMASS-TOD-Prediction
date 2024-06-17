@@ -1,0 +1,147 @@
+HU,Age,PMI,pH,RIN,Sex,Race,Cause,Manner,TOD
+510,63,12.4,6.5,7.5,M,W,Gastrointestinal bleeding,Natural,−5.83
+516,20,14,7.1,8.4,M,B,Gunshot wound to chest,Homicide,16.66
+545,65,13.1,6.9,6.2,M,B,Pancreatic carcinoma with pulmonary metastasis,Natural,14.9
+546,37,23.5,6.7,8.6,F,W,ASCVD,Natural,6.07
+551,61,16.4,6.6,8.3,M,W,Cardiac tamponade,Natural,11.35
+567,46,15,6.8,8.9,F,W,Mitral valve prolapse,Natural,14.11
+568,60,9.5,6.9,8.7,F,W,ASCVD,Natural,−5.47
+575,55,11.3,6.8,9.6,F,B,ASCVD,Natural,15.78
+585,26,16,6.7,8.3,M,W,Trauma,Accidental,15.6
+604,39,19.3,7.1,8.6,M,W,Hypoplastic coronary artery,Natural,9.27
+615,62,7.2,6.4,7.8,M,W,Ruptured abdominal aortic aneurysm,Natural,−3.38
+627,43,14.1,7.1,7,F,B,Chronic obstructive pulmonary disease,Natural,14.62
+630,65,21.2,7,9,M,W,ASCVD,Natural,6.39
+634,52,16.2,7,8.5,M,W,ASCVD,Natural,13.54
+643,50,24,6.2,8,M,W,ASCVD,Natural,4.34
+645,69,23,6.7,8,M,W,ASCVD,Accidental,4.91
+681,51,11.6,7.2,8.9,M,W,Hypertrophic cardiomyopathy,Natural,16
+688,55,21.5,7,7.2,M,W,Hypertrophic cardiomyopathy,Natural,7.61
+694,38,20.7,7,7.7,M,W,Subarachnoid hemorrhage,Natural,8.95
+700,42,26.1,7,8.7,M,W,ASCVD,Natural,3.64
+704,70,20.6,7,8.7,M,W,ASCVD,Natural,10.56
+727,19,7,7.4,9.2,M,B,Multiple trauma,Accidental,−2.83
+731,63,10.5,6.8,8.2,F,W,ASCVD,Natural,−4.11
+737,66,18.2,7.3,7.5,M,W,ASCVD,Natural,10.81
+739,40,15.8,6.9,8.4,M,W,ASCVD,Natural,11.25
+746,64,20.8,6.7,7.6,F,B,Peritonitis,Natural,7.9
+784,58,5.5,7.1,9.1,M,W,ASCVD,Natural,−2.70
+794,52,20,6.8,8.4,M,B,End-stage dilated cardiomyopathy,Natural,6.68
+795,68,11.8,6.8,8.2,M,W,Ruptured abdominal aortic aneurysm,Natural,15.13
+806,57,24,6.9,7.8,M,W,Pulmonary embolism,Natural,4.31
+812,55,23,6.7,8.5,M,W,ASCVD,Natural,4.37
+818,67,24,7.1,8.4,F,W,Anaphylactic reaction to cef0tan,Accidental,5.35
+825,59,16.9,7.1,7.8,M,W,Cardiac tamponade,Natural,12.6
+838,58,16.5,7,8.5,M,W,ASCVD,Natural,12.43
+839,74,5.3,7.1,8.9,F,W,Massive BFT,Accidental,−1.15
+840,41,15.4,6.8,9.1,F,W,ASCVD,Natural,13.97
+841,70,22.3,7.2,7.2,M,W,Hypertrophic cardiomyopathy,Natural,7.69
+855,62,11.5,6.7,8.4,M,B,Hypertrophic cardiomyopathy,Natural,17.28
+857,48,16.6,6.7,8.9,M,W,ASCVD,Natural,10.13
+866,66,12.2,7,8.5,M,W,ASCVD,Natural,15.24
+869,51,6.5,7.2,8.9,M,W,Severe ASCVD,Natural,−3.46
+871,28,16.5,7.1,8.5,M,W,Trauma (chest),Accidental,12.04
+895,39,15.4,7.6,8.8,M,W,ASCVD,Natural,14.25
+902,60,23.6,6.7,7.7,M,W,ASCVD,Natural,4.45
+920,60,23,7.2,8.5,M,W,ASCVD,Natural,3.93
+932,68,25.9,6.8,8.3,M,W,Cardiac tamponade,Natural,2.23
+952,62,5.5,6.6,8.7,M,W,ASCVD,Natural,4.08
+953,54,18.6,6.2,7.1,M,W,"Extensive BFT (head, torso, and limbs)",Accidental,9.38
+969,27,10.6,7,7.7,M,W,Trauma to trunk and extremities,Accidental,−4.91
+970,42,25.9,6.4,7.2,M,W,ASCVD,Natural,4.38
+972,72,16.4,6.3,7.7,M,W,Trauma (cervical/upper thoracic vertebra),Accidental,11.71
+980,52,11,6.4,8.3,M,W,ASCVD,Natural,−5.96
+998,25,6.3,5.9,7.6,M,W,Pulmonary thromboembolism,Natural,2.24
+1026,59,19.8,6.3,7.4,M,W,ASCVD,Natural,9.64
+1030,96,13.2,6.3,6.8,F,W,Fractured cervical spinal column,Accidental,16.16
+1031,53,23.2,6.8,8.9,M,W,Arteriosclerotic and hypertensive CVD,Natural,6.71
+1038,56,14.6,6.5,7,M,W,Rupture of dissecting hematoma of aorta,Natural,14.64
+1047,43,13.8,6.6,9,M,W,ASCVD,Natural,15.15
+1054,44,17.1,6.6,8.8,F,W,ASCVD,Natural,10.2
+1065,85,20.2,6.3,7.1,M,B,Pulmonary embolism,Accidental,7.32
+1067,49,6,6.6,8.2,M,W,Hypertensive heart disease,Natural,−1.95
+1083,20,19.9,6.6,8.8,M,W,Trauma (head and trunk),Accidental,9.2
+1091,58,16.5,6.6,8.1,M,W,ASCVD,Natural,6.67
+1092,40,16.6,6.8,8,F,B,Mitral valve prolapse,Natural,11.81
+1099,24,9.1,6.5,8.6,F,W,Cardiomyopathy not otherwise specified,Natural,1.37
+1103,89,22.9,6.8,7.8,M,W,BFT of head and trunk,Accidental,8.12
+1108,60,23.3,6.3,8.1,M,W,ASCVD,Natural,6.92
+1114,29,11.4,6.8,9.4,F,W,Trauma (trunk),Accidental,−5.57
+1119,57,20.2,6.8,8,M,W,ASCVD,Natural,8.62
+1122,55,15.4,6.7,7.9,M,W,Cardiac tamponade,Natural,13.18
+1129,54,21,6.8,9,M,W,ASCVD,Natural,7.91
+1141,54,19.2,6.6,8.5,M,W,Arteriosclerotic and hypertensive CVD,Natural,9.48
+1142,44,12.3,5.8,6.1,M,B,Hypertensive and arteriosclerotic CVD,Natural,15.98
+1144,75,21.4,6.7,7.3,M,W,Arteriosclerotic and hypertensive CVD,Natural,7.75
+1153,55,28,6.6,8,M,W,Atherosclerotic and hypertensive heart disease,Natural,3.69
+1159,51,16.7,6.5,7.6,M,W,Hypertensive heart disease,Natural,11.81
+1165,67,21,6.6,7.5,F,W,Cardiac tamponade,Natural,10.49
+1171,56,19.2,6.5,8.5,M,W,Cardiac tamponade,Natural,8.55
+1172,52,16.8,6.5,7.7,F,B,Hypertensive heart disease,Natural,11.79
+1191,59,19.4,6.2,8.4,M,B,Atherosclerotic and hypertensive heart disease,Natural,9.24
+1193,31,12.8,6.5,7.6,M,W,Myocardial infarction due to ASCVD,Natural,15.64
+1194,27,16.4,6.4,8.8,M,W,ASCVD,Natural,12.63
+1196,36,14.5,6.4,8.2,F,W,Positional asphyxia,Accidental,17.15
+1201,52,16.4,6.2,8.1,F,W,ASCVD,Natural,12.51
+1212,49,9.2,6.6,8.2,M,B,Massive subarachnoid hemorrhage,Natural,−4.42
+1214,57,16.4,6.4,7.5,M,W,Arteriosclerotic and hypertensive CVD,Natural,12.56
+1219,56,14.9,6.5,8.5,M,W,ASCVD,Natural,14.77
+1237,64,8.7,6.4,7.7,M,W,ASCVD,Natural,0.7
+1239,22,9.5,6.7,7.4,M,W,BFT to the head and neck,Accidental,−5.42
+1245,59,21.6,6.6,7.4,M,W,ASCVD,Natural,7.37
+1247,58,22.7,6.4,8.4,F,W,ASCVD,Natural,8.46
+1264,38,21.1,6.7,8.6,M,W,Cardiomyopathy,Natural,5.6
+1270,73,19.7,6.7,7.7,F,W,BFT of neck and trunk,Accidental,8.62
+1276,57,14.9,6,6.1,F,W,Arteriosclerotic CVD,Natural,13.9
+1280,50,23.5,6.7,7.7,F,W,Pulmonary thromboembolism,Natural,3.95
+1288,59,19.7,6.9,7.4,M,W,Atherosclerotic and hypertensive heart disease,Natural,9.49
+1293,65,18.5,6.6,7,F,W,BFT of trunk,Accidental,11.51
+1298,48,24.5,6.8,7.9,M,W,ASCVD,Natural,4.78
+1300,56,16.5,6,6.9,F,W,Pulmonary thromboembolism,Natural,13.22
+1306,18,16,6.6,7.9,M,W,Congenital heart anomaly,Natural,13.54
+1307,32,4.8,6.7,7.6,M,B,Hypertensive cardiomyopathy,Natural,4.03
+1308,58,20.2,6,6.2,M,W,Hepatocellular carcinoma,Natural,8.43
+1317,56,22.9,6.5,8.8,M,W,Arteriosclerotic and hypertensive CVD,Natural,4.8
+1326,58,16.4,6.7,8,M,W,ASCVD,Natural,13.47
+1333,46,18.2,6.8,8.7,M,W,Arteriosclerotic and hypertensive CVD,Natural,10.65
+1335,18,14.6,7,8.7,M,W,BFT of head and trunk,Accidental,16.06
+1350,21,24.2,6.4,7.3,M,W,BFT of trunk,Accidental,6.62
+1371,33,13,6.2,8.5,M,B,Eosinophilic myocarditis,Natural,−5.61
+1374,43,21.7,6.6,7.2,M,W,Coronary atherosclerotic disease,Natural,7.91
+1378,53,20.1,6.5,7.8,F,B,Coronary artery disease,Natural,8.46
+1382,73,25.3,6.6,7.9,F,W,BFT of head with ponto-midbrain transection,Accidental,2.87
+1391,51,7.8,6.6,7.1,F,W,Atherosclerotic coronary artery disease,Natural,−0.59
+1394,45,17.3,6.6,7.3,M,W,Atherosclerotic coronary artery disease,Natural,10.12
+1400,50,16,5.8,6.8,M,W,Coronary atherosclerotic disease,Natural,11.4
+1410,54,15.3,6.9,7.8,M,W,Atherosclerotic coronary artery disease,Natural,13.11
+1433,65,24.1,6.8,7.5,M,W,Acute subdural hematoma with skull fracture,Accidental,7.18
+1434,25,25.5,6.7,7.5,M,B,Cardiac arrhythmia while exercising,Natural,5.35
+1441,57,22.3,6.5,8.5,M,W,Arteriosclerotic CVD,Natural,7.88
+1444,46,22,6.5,8.4,M,W,Pulmonary thromboembolus,Natural,5.25
+1447,51,16.2,6.5,8.5,M,W,Calcified atherosclerotic coronary artery disease,Natural,15.53
+1460,53,21.3,6.2,7.3,M,W,Severe ASCVD,Natural,6.28
+1462,47,17.2,6.6,8.5,M,W,ASCVD,Natural,10.58
+1466,64,20,6.7,8.8,F,B,BFT to trunk,Accidental,9.33
+1482,25,20.2,6.6,9.1,M,W,ASCVD,Natural,8.26
+1488,39,21.5,6.4,8.7,M,B,Bilateral pulmonary thromboemboli,Natural,6.38
+1497,38,8.5,6.3,9.1,M,W,ASCVD,Natural,−2.80
+1511,48,23.5,6.8,7.2,M,W,Severe ASCVD,Natural,4.3
+1514,60,25,6.4,6.6,F,W,Bilateral pulmonary emboli,Natural,2.91
+1524,66,9.4,6.4,8.1,M,W,Acute small intestinal ischemic infarction,Natural,−4.21
+1541,80,10.5,6.5,8,M,W,Pulmonary fibrosis,Natural,17.4
+1554,50,23.2,6.5,7.6,M,W,Acute myocardial infarction,Natural,7.67
+1555,17,15.1,6.9,7.9,M,W,"BFT to head, thorax, abdomen, right",Accidental,16.7
+1558,54,24.4,6.9,7.7,M,W,ASCVD,Natural,4.6
+1559,45,8.9,6,6.9,M,W,Cardiomegaly,Natural,−1.66
+1564,48,19.9,6.8,7.5,M,W,BFT to trunk,Accidental,8.99
+1574,52,26.7,6.3,7,M,W,Bilateral pulmonary embolism,Natural,2.07
+1583,58,19.1,6.8,8.2,M,W,BFT of the trunk,Accidental,9.1
+1598,50,23.8,6.9,7.8,M,W,Acute myocardial infarction,Natural,10.12
+1623,52,25.7,6.3,6.6,M,W,BFT of head and neck,Accidental,4.86
+1637,46,16.6,6.9,8.2,M,W,Coronary artery atherosclerosis,Natural,15.86
+10003,49,21.2,6.5,8.4,M,W,Multiple blunt force injuries,Accidental,9.82
+10005,42,23.5,6.7,7.4,M,W,Multiple blunt force injuries,Accidental,7.43
+10013,16,9.3,6.7,9,F,W,Trauma (multiple blunt force injuries),Accidental,−3.88
+10016,18,16.3,6.8,5.9,M,B,Gunshot wound of abdomen,Homicide,15.46
+10021,38,12.7,6.3,7.2,M,W,Multiple blunt force injuries,Accidental,16.86
+10027,53,13.1,6.2,6.6,F,B,Congestive heart failure,Natural,17.13

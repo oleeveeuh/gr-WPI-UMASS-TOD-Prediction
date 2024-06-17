@@ -1,7 +1,8 @@
 # Load in data
-full_data <- read.csv("data/wrangled data/full_data_6_14_2024.csv")
-BA_11 <- read.csv("data/wrangled data/BA11_data_6_14_2024.csv")
-BA_47 <- read.csv("data/wrangled data/BA47_data_6_14_2024.csv")
+full_data <- read.csv("data/wrangled data/full_data_6_17_2024.csv")
+BA_11 <- read.csv("data/wrangled data/BA11_data_6_17_2024.csv")
+BA_47 <- read.csv("data/wrangled data/BA47_data_6_17_2024.csv")
+
 
 # Splits a dataframe into a list of dataframes based on the TOD. Each list-item contains the values
 # for 1 hour window
@@ -9,10 +10,11 @@ split_hourly <- function(data) {
   # Initialize output list
   output_list <- list()
   # Starting at index = 1 (R indices start at 1 not 0), append the rows in the dataframe for which
-  # TOD is in a 1 hour window. Loop through all possible hour values
-  for (hour in-6:17) {
-    output_list[hour + 7] <- list(data[(data$TOD >= hour &
-                                          data$TOD <= hour + 1), ])
+  # TOD is in a 2 hour window. Loop through all possible hour values
+  bin_cutoffs <- c(0:12) * 2
+  for (i in 1:(length(bin_cutoffs)-1)) {
+    output_list[i] <- list(data[(data$TOD_pos >= bin_cutoffs[[i]] &
+                                          data$TOD_pos < bin_cutoffs[[i+1]]), ])
   }
   return(output_list)
 }
@@ -31,13 +33,20 @@ split_train_test <- function(data_list, train_percent) {
     num_train <- ceiling(train_percent * nrow(hour_data))
     # calculate number of testing data points
     num_test <- nrow(hour_data) - num_train
-    # Generate random logical vector of T/F with `num_train` TRUE values and `num_test` FALSE values
-    is_training <- sample(c(rep(TRUE, num_train), rep(FALSE, num_test)), nrow(hour_data) , replace = F)
-    # Subset current dataframe in for loop using logical from above, add to the train_data frame
-    train_data <- rbind(train_data, hour_data[is_training, ])
-    # Subset current dataframe in for loop using OPPOSITE (!) values as logical from above, add to
-    # the train_data frame
-    test_data <- rbind(test_data, hour_data[!is_training, ])
+    # select the first num_train rows from the current hour_data frame
+    train_data <- rbind(train_data, hour_data[1:num_train, ])
+    # negatively select (remove) the first num_train rows from the hour_data frame. This results in
+    # the last num_test rows to be kept
+    test_data <- rbind(test_data, hour_data[-c(1:num_train), ])
+    
+    #Keeping for later in case we go back to the random sampling method
+                # # Generate random logical vector of T/F with `num_train` TRUE values and `num_test` FALSE values
+                # is_training <- sample(c(rep(TRUE, num_train), rep(FALSE, num_test)), nrow(hour_data) , replace = F)
+                # # Subset current dataframe in for loop using logical from above, add to the train_data frame
+                # train_data <- rbind(train_data, hour_data[is_training, ])
+                # # Subset current dataframe in for loop using OPPOSITE (!) values as logical from above, add to
+                # # the train_data frame
+                # test_data <- rbind(test_data, hour_data[!is_training, ])
   }
   # Print some info to verify things worked / see final percent breakdowns
   cat("Total Observations:", nrow(train_data) + nrow(test_data))

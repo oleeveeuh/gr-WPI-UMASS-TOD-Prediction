@@ -54,20 +54,60 @@ split_train_test <- function(data_list, train_percent) {
   return(list(train_data, test_data))
 }
 
+min_max_normalize <- function(data_list) {
+  for (i in 1:2) {
+    for (col in c(2, 4:239)) {
+      data_list[[i]][col] <- (data_list[[i]][col] - min(data_list[[i]][col])) / (max(data_list[[i]][col]) - min(data_list[[i]][col]))
+    }
+  }
+  return(data_list)
+}
+
+log_normalize <- function(data_list) {
+  for (i in 1:2) {
+    for (col in c(2, 4:239)) {
+      data_list[[i]][col] <- log(data_list[[i]][col])
+    }
+  }
+  return(data_list)
+}
+
+
+
+
+
 # BA11 data
 BA11_hourly <- split_hourly(BA_11)
 BA11_80_list <- split_train_test(BA11_hourly, 0.8)
 BA11_70_list <- split_train_test(BA11_hourly, 0.7)
 BA11_60_list <- split_train_test(BA11_hourly, 0.6)
 
-write.csv(BA11_80_list[[1]], "data/train test split data/BA11_80_train.csv")
-write.csv(BA11_80_list[[2]], "data/train test split data/BA11_80_test.csv")
+BA11_80_MM_list <- min_max_normalize(BA11_80_list)
+BA11_80_log_list <- log_normalize(BA11_80_list)
 
-write.csv(BA11_70_list[[1]], "data/train test split data/BA11_70_train.csv")
-write.csv(BA11_70_list[[2]], "data/train test split data/BA11_70_test.csv")
+BA11_70_MM_list <- min_max_normalize(BA11_70_list)
+BA11_70_log_list <- log_normalize(BA11_70_list)
 
-write.csv(BA11_60_list[[1]], "data/train test split data/BA11_60_train.csv")
-write.csv(BA11_60_list[[2]], "data/train test split data/BA11_60_test.csv")
+BA11_60_MM_list <- min_max_normalize(BA11_60_list)
+BA11_60_log_list <- log_normalize(BA11_60_list)
+
+
+write.csv(BA11_80_MM_list[[1]], "data/train test split data/BA11_80_MM_train.csv")
+write.csv(BA11_80_MM_list[[2]], "data/train test split data/BA11_80_MM_test.csv")
+write.csv(BA11_80_log_list[[1]], "data/train test split data/BA11_80_log_train.csv")
+write.csv(BA11_80_log_list[[2]], "data/train test split data/BA11_80_log_test.csv")
+
+write.csv(BA11_70_MM_list[[1]], "data/train test split data/BA11_70_MM_train.csv")
+write.csv(BA11_70_MM_list[[2]], "data/train test split data/BA11_70_MM_test.csv")
+write.csv(BA11_70_log_list[[1]], "data/train test split data/BA11_70_log_train.csv")
+write.csv(BA11_70_log_list[[2]], "data/train test split data/BA11_70_log_test.csv")
+
+write.csv(BA11_60_MM_list[[1]], "data/train test split data/BA11_60_MM_train.csv")
+write.csv(BA11_60_MM_list[[2]], "data/train test split data/BA11_60_MM_test.csv")
+write.csv(BA11_60_log_list[[1]], "data/train test split data/BA11_60_log_train.csv")
+write.csv(BA11_60_log_list[[2]], "data/train test split data/BA11_60_log_test.csv")
+
+
 
 # BA47 data
 BA47_hourly <- split_hourly(BA_47)
@@ -75,14 +115,31 @@ BA47_80_list <- split_train_test(BA47_hourly, 0.8)
 BA47_70_list <- split_train_test(BA47_hourly, 0.7)
 BA47_60_list <- split_train_test(BA47_hourly, 0.6)
 
-write.csv(BA47_80_list[[1]], "data/train test split data/BA47_80_train.csv")
-write.csv(BA47_80_list[[2]], "data/train test split data/BA47_80_test.csv")
+BA47_80_MM_list <- min_max_normalize(BA47_80_list)
+BA47_80_log_list <- log_normalize(BA47_80_list)
 
-write.csv(BA47_70_list[[1]], "data/train test split data/BA47_70_train.csv")
-write.csv(BA47_70_list[[2]], "data/train test split data/BA47_70_test.csv")
+BA47_70_MM_list <- min_max_normalize(BA47_70_list)
+BA47_70_log_list <- log_normalize(BA47_70_list)
 
-write.csv(BA47_60_list[[1]], "data/train test split data/BA47_60_train.csv")
-write.csv(BA47_60_list[[2]], "data/train test split data/BA47_60_test.csv")
+BA47_60_MM_list <- min_max_normalize(BA47_60_list)
+BA47_60_log_list <- log_normalize(BA47_60_list)
+
+
+write.csv(BA47_80_MM_list[[1]], "data/train test split data/BA47_80_MM_train.csv")
+write.csv(BA47_80_MM_list[[2]], "data/train test split data/BA47_80_MM_test.csv")
+write.csv(BA47_80_log_list[[1]], "data/train test split data/BA47_80_log_train.csv")
+write.csv(BA47_80_log_list[[2]], "data/train test split data/BA47_80_log_test.csv")
+
+write.csv(BA47_70_MM_list[[1]], "data/train test split data/BA47_70_MM_train.csv")
+write.csv(BA47_70_MM_list[[2]], "data/train test split data/BA47_70_MM_test.csv")
+write.csv(BA47_70_log_list[[1]], "data/train test split data/BA47_70_log_train.csv")
+write.csv(BA47_70_log_list[[2]], "data/train test split data/BA47_70_log_test.csv")
+
+write.csv(BA47_60_MM_list[[1]], "data/train test split data/BA47_60_MM_train.csv")
+write.csv(BA47_60_MM_list[[2]], "data/train test split data/BA47_60_MM_test.csv")
+write.csv(BA47_60_log_list[[1]], "data/train test split data/BA47_60_log_train.csv")
+write.csv(BA47_60_log_list[[2]], "data/train test split data/BA47_60_log_test.csv")
+
 
 # full data
 full_hourly <- split_hourly(full_data)
@@ -90,11 +147,27 @@ full_80_list <- split_train_test(full_hourly, 0.8)
 full_70_list <- split_train_test(full_hourly, 0.7)
 full_60_list <- split_train_test(full_hourly, 0.6)
 
-write.csv(full_80_list[[1]], "data/train test split data/full_80_train.csv")
-write.csv(full_80_list[[2]], "data/train test split data/full_80_test.csv")
+full_80_MM_list <- min_max_normalize(full_80_list)
+full_80_log_list <- log_normalize(full_80_list)
 
-write.csv(full_70_list[[1]], "data/train test split data/full_70_train.csv")
-write.csv(full_70_list[[2]], "data/train test split data/full_70_test.csv")
+full_70_MM_list <- min_max_normalize(full_70_list)
+full_70_log_list <- log_normalize(full_70_list)
 
-write.csv(full_60_list[[1]], "data/train test split data/full_60_train.csv")
-write.csv(full_60_list[[2]], "data/train test split data/full_60_test.csv")
+full_60_MM_list <- min_max_normalize(full_60_list)
+full_60_log_list <- log_normalize(full_60_list)
+
+
+write.csv(full_80_MM_list[[1]], "data/train test split data/full_80_MM_train.csv")
+write.csv(full_80_MM_list[[2]], "data/train test split data/full_80_MM_test.csv")
+write.csv(full_80_log_list[[1]], "data/train test split data/full_80_log_train.csv")
+write.csv(full_80_log_list[[2]], "data/train test split data/full_80_log_test.csv")
+
+write.csv(full_70_MM_list[[1]], "data/train test split data/full_70_MM_train.csv")
+write.csv(full_70_MM_list[[2]], "data/train test split data/full_70_MM_test.csv")
+write.csv(full_70_log_list[[1]], "data/train test split data/full_70_log_train.csv")
+write.csv(full_70_log_list[[2]], "data/train test split data/full_70_log_test.csv")
+
+write.csv(full_60_MM_list[[1]], "data/train test split data/full_60_MM_train.csv")
+write.csv(full_60_MM_list[[2]], "data/train test split data/full_60_MM_test.csv")
+write.csv(full_60_log_list[[1]], "data/train test split data/full_60_log_train.csv")
+write.csv(full_60_log_list[[2]], "data/train test split data/full_60_log_test.csv")

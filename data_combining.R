@@ -64,7 +64,8 @@ full_df <- full_df |>
   distinct() |> 
   filter(gene_name %in% circadian_genes) |> 
   ungroup() |> 
-  select(-patient_ID)
+  select(-patient_ID) |> 
+  mutate(Sex = ifelse(Sex == "M", 1, 0))
 
 full_df <- full_df |> 
   pivot_wider(names_from = gene_name, values_from = expression_level)
@@ -72,9 +73,9 @@ full_df <- full_df |>
 final_data_BA11 <- full_df[full_df$BA_ID == 11, -1] 
 final_data_BA47 <- full_df[full_df$BA_ID == 47, -1]
 
-write.csv(full_df[, -1], "data/wrangled data/full_data_6_17_2024.csv")
-write.csv(final_data_BA11, "data/wrangled data/BA11_data_6_17_2024.csv")
-write.csv(final_data_BA47, "data/wrangled data/BA47_data_6_17_2024.csv")
+write.csv(full_df[, -1], "data/wrangled data/full_data_6_17_2024.csv", row.names = FALSE)
+write.csv(final_data_BA11, "data/wrangled data/BA11_data_6_17_2024.csv", row.names = FALSE)
+write.csv(final_data_BA47, "data/wrangled data/BA47_data_6_17_2024.csv", row.names = FALSE)
 
 
 

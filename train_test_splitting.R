@@ -12,16 +12,17 @@ split_hourly <- function(data) {
   # Starting at index = 1 (R indices start at 1 not 0), append the rows in the dataframe for which
   # TOD is in a 2 hour window. Loop through all possible hour values
   bin_cutoffs <- c(0:12) * 2
-  for (i in 1:(length(bin_cutoffs)-1)) {
+  for (i in 1:(length(bin_cutoffs) - 1)) {
     output_list[i] <- list(data[(data$TOD_pos >= bin_cutoffs[[i]] &
-                                          data$TOD_pos < bin_cutoffs[[i+1]]), ])
+                                   data$TOD_pos < bin_cutoffs[[i +
+                                                                 1]]), ])
   }
   return(output_list)
 }
 
 # Makes a list with 2 items: the data frame with the training data, and the dataframe with testing
 # data
-split_train_test <- function(data_list, train_percent) {
+split_train_test <- function(data_list, train_percent, name) {
   #Make sure that the training percent in is appropriate decimal form
   stopifnot(train_percent <= 1 && train_percent >= 0)
   #Initialize data frames
@@ -40,134 +41,79 @@ split_train_test <- function(data_list, train_percent) {
     test_data <- rbind(test_data, hour_data[-c(1:num_train), ])
     
     #Keeping for later in case we go back to the random sampling method
-                # # Generate random logical vector of T/F with `num_train` TRUE values and `num_test` FALSE values
-                # is_training <- sample(c(rep(TRUE, num_train), rep(FALSE, num_test)), nrow(hour_data) , replace = F)
-                # # Subset current dataframe in for loop using logical from above, add to the train_data frame
-                # train_data <- rbind(train_data, hour_data[is_training, ])
-                # # Subset current dataframe in for loop using OPPOSITE (!) values as logical from above, add to
-                # # the train_data frame
-                # test_data <- rbind(test_data, hour_data[!is_training, ])
+    # # Generate random logical vector of T/F with `num_train` TRUE values and `num_test` FALSE values
+    # is_training <- sample(c(rep(TRUE, num_train), rep(FALSE, num_test)), nrow(hour_data) , replace = F)
+    # # Subset current dataframe in for loop using logical from above, add to the train_data frame
+    # train_data <- rbind(train_data, hour_data[is_training, ])
+    # # Subset current dataframe in for loop using OPPOSITE (!) values as logical from above, add to
+    # # the train_data frame
+    # test_data <- rbind(test_data, hour_data[!is_training, ])
   }
   # Print some info to verify things worked / see final percent breakdowns
   cat("Total Observations:", nrow(train_data) + nrow(test_data))
   cat("\nReal % Testing Data:", nrow(test_data) / (nrow(train_data) + nrow(test_data)))
-  return(list(train_data, test_data))
+  return_list <- list(train_data, test_data)
+  names(return_list) <- c(
+    paste0(name, '_', train_percent * 100, "_train"),
+    paste0(name, '_', train_percent * 100, "_test")
+  )
+  return(return_list)
 }
 
 min_max_normalize <- function(data_list) {
   for (i in 1:2) {
-    for (col in c(2, 4:239)) {
+    for (col in c(2, 4:238)) {
       data_list[[i]][col] <- (data_list[[i]][col] - min(data_list[[i]][col])) / (max(data_list[[i]][col]) - min(data_list[[i]][col]))
     }
   }
+  current_names <- names(data_list)
+  names_front <- stringr::str_extract(current_names[[1]], "[BA1147full]{4,6}_\\d{2}_")
+  names(data_list) <- c(paste0(names_front, "MM_train"), (paste0(names_front, "MM_test")))
   return(data_list)
 }
 
 log_normalize <- function(data_list) {
   for (i in 1:2) {
-    for (col in c(2, 4:239)) {
+    for (col in c(2, 4:238)) {
       data_list[[i]][col] <- log(data_list[[i]][col])
     }
   }
+  current_names <- names(data_list)
+  names_front <- stringr::str_extract(current_names[[1]], "[BA1147full]{4,6}_\\d{2}_")
+  names(data_list) <- c(paste0(names_front, "log_train"), (paste0(names_front, "log_test")))
   return(data_list)
 }
 
+# Loop for all data
 
+dataframes <- list(full_data, BA_11, BA_47)
+df_names <- c("full", "BA11", "BA47")
+train_percents <- c(0.8, 0.7, 0.6)
 
+output <- list()
+for (i in 1:3) {
+  current_df <- dataframes[[i]]
+  df_name <- df_names[[i]]
+  df_hourly <- split_hourly(current_df)
+  for (percent in train_percents) {
+    temp_list <- split_train_test(df_hourly, percent, df_name)
+    non_normalized <- temp_list
+    names_front <- stringr::str_extract(names(non_normalized)[[1]], "[BA1147full]{4,6}_\\d{2}_")
+    names(non_normalized) <- c(paste0(names_front, "nonnormalized_train"), (paste0(names_front, "nonnormalized_test")))
+    output[[length(output) + 1]] <- list(min_max_normalize(temp_list),
+                                         log_normalize(temp_list),
+                                         non_normalized)
+  }
+}
 
+all_dfs <- unlist(unlist(output, recursive = FALSE), recursive = FALSE)
+save(all_dfs, file = "data/all_dfs.RData")
 
-# BA11 data
-BA11_hourly <- split_hourly(BA_11)
-BA11_80_list <- split_train_test(BA11_hourly, 0.8)
-BA11_70_list <- split_train_test(BA11_hourly, 0.7)
-BA11_60_list <- split_train_test(BA11_hourly, 0.6)
-
-BA11_80_MM_list <- min_max_normalize(BA11_80_list)
-BA11_80_log_list <- log_normalize(BA11_80_list)
-
-BA11_70_MM_list <- min_max_normalize(BA11_70_list)
-BA11_70_log_list <- log_normalize(BA11_70_list)
-
-BA11_60_MM_list <- min_max_normalize(BA11_60_list)
-BA11_60_log_list <- log_normalize(BA11_60_list)
-
-
-write.csv(BA11_80_MM_list[[1]], "data/train test split data/BA11_80_MM_train.csv")
-write.csv(BA11_80_MM_list[[2]], "data/train test split data/BA11_80_MM_test.csv")
-write.csv(BA11_80_log_list[[1]], "data/train test split data/BA11_80_log_train.csv")
-write.csv(BA11_80_log_list[[2]], "data/train test split data/BA11_80_log_test.csv")
-
-write.csv(BA11_70_MM_list[[1]], "data/train test split data/BA11_70_MM_train.csv")
-write.csv(BA11_70_MM_list[[2]], "data/train test split data/BA11_70_MM_test.csv")
-write.csv(BA11_70_log_list[[1]], "data/train test split data/BA11_70_log_train.csv")
-write.csv(BA11_70_log_list[[2]], "data/train test split data/BA11_70_log_test.csv")
-
-write.csv(BA11_60_MM_list[[1]], "data/train test split data/BA11_60_MM_train.csv")
-write.csv(BA11_60_MM_list[[2]], "data/train test split data/BA11_60_MM_test.csv")
-write.csv(BA11_60_log_list[[1]], "data/train test split data/BA11_60_log_train.csv")
-write.csv(BA11_60_log_list[[2]], "data/train test split data/BA11_60_log_test.csv")
-
-
-
-# BA47 data
-BA47_hourly <- split_hourly(BA_47)
-BA47_80_list <- split_train_test(BA47_hourly, 0.8)
-BA47_70_list <- split_train_test(BA47_hourly, 0.7)
-BA47_60_list <- split_train_test(BA47_hourly, 0.6)
-
-BA47_80_MM_list <- min_max_normalize(BA47_80_list)
-BA47_80_log_list <- log_normalize(BA47_80_list)
-
-BA47_70_MM_list <- min_max_normalize(BA47_70_list)
-BA47_70_log_list <- log_normalize(BA47_70_list)
-
-BA47_60_MM_list <- min_max_normalize(BA47_60_list)
-BA47_60_log_list <- log_normalize(BA47_60_list)
-
-
-write.csv(BA47_80_MM_list[[1]], "data/train test split data/BA47_80_MM_train.csv")
-write.csv(BA47_80_MM_list[[2]], "data/train test split data/BA47_80_MM_test.csv")
-write.csv(BA47_80_log_list[[1]], "data/train test split data/BA47_80_log_train.csv")
-write.csv(BA47_80_log_list[[2]], "data/train test split data/BA47_80_log_test.csv")
-
-write.csv(BA47_70_MM_list[[1]], "data/train test split data/BA47_70_MM_train.csv")
-write.csv(BA47_70_MM_list[[2]], "data/train test split data/BA47_70_MM_test.csv")
-write.csv(BA47_70_log_list[[1]], "data/train test split data/BA47_70_log_train.csv")
-write.csv(BA47_70_log_list[[2]], "data/train test split data/BA47_70_log_test.csv")
-
-write.csv(BA47_60_MM_list[[1]], "data/train test split data/BA47_60_MM_train.csv")
-write.csv(BA47_60_MM_list[[2]], "data/train test split data/BA47_60_MM_test.csv")
-write.csv(BA47_60_log_list[[1]], "data/train test split data/BA47_60_log_train.csv")
-write.csv(BA47_60_log_list[[2]], "data/train test split data/BA47_60_log_test.csv")
-
-
-# full data
-full_hourly <- split_hourly(full_data)
-full_80_list <- split_train_test(full_hourly, 0.8)
-full_70_list <- split_train_test(full_hourly, 0.7)
-full_60_list <- split_train_test(full_hourly, 0.6)
-
-full_80_MM_list <- min_max_normalize(full_80_list)
-full_80_log_list <- log_normalize(full_80_list)
-
-full_70_MM_list <- min_max_normalize(full_70_list)
-full_70_log_list <- log_normalize(full_70_list)
-
-full_60_MM_list <- min_max_normalize(full_60_list)
-full_60_log_list <- log_normalize(full_60_list)
-
-
-write.csv(full_80_MM_list[[1]], "data/train test split data/full_80_MM_train.csv")
-write.csv(full_80_MM_list[[2]], "data/train test split data/full_80_MM_test.csv")
-write.csv(full_80_log_list[[1]], "data/train test split data/full_80_log_train.csv")
-write.csv(full_80_log_list[[2]], "data/train test split data/full_80_log_test.csv")
-
-write.csv(full_70_MM_list[[1]], "data/train test split data/full_70_MM_train.csv")
-write.csv(full_70_MM_list[[2]], "data/train test split data/full_70_MM_test.csv")
-write.csv(full_70_log_list[[1]], "data/train test split data/full_70_log_train.csv")
-write.csv(full_70_log_list[[2]], "data/train test split data/full_70_log_test.csv")
-
-write.csv(full_60_MM_list[[1]], "data/train test split data/full_60_MM_train.csv")
-write.csv(full_60_MM_list[[2]], "data/train test split data/full_60_MM_test.csv")
-write.csv(full_60_log_list[[1]], "data/train test split data/full_60_log_train.csv")
-write.csv(full_60_log_list[[2]], "data/train test split data/full_60_log_test.csv")
+for (name in names(all_dfs)) {
+  # Get the dataset
+  dataset <- all_dfs[[name]]
+  # Create the file name
+  file_name <- paste0("data/train test split data/", name, ".csv")
+  # Write the dataset to a CSV file
+  write.csv(dataset, file = file_name, row.names = FALSE)
+}

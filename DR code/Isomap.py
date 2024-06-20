@@ -1,33 +1,50 @@
 from sklearn.manifold import Isomap
+from sklearn.neighbors import NearestNeighbors
 import pandas as pd
 import os
 
+# Function to compute KNN preservation
+def knn_preservation(X, X_embedded, n_neighbors):
+    nn_orig = NearestNeighbors(n_neighbors=n_neighbors).fit(X)
+    nn_embedded = NearestNeighbors(n_neighbors=n_neighbors).fit(X_embedded)
+    
+    orig_neighbors = nn_orig.kneighbors(X, return_distance=False)
+    embedded_neighbors = nn_embedded.kneighbors(X_embedded, return_distance=False)
+    
+    preservation_count = 0
+    for i in range(X.shape[0]):
+        preservation_count += len(set(orig_neighbors[i]).intersection(set(embedded_neighbors[i])))
+    
+    return preservation_count / (X.shape[0] * n_neighbors)
+
 # Function to find the best Isomap configuration
-def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=50, min_components=2, max_components=30, max_residual_variance=0.1):
+def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, knn_threshold=0.9):
     best_configuration = None
-    best_residual_variance = float('inf')
-    best_component = max_components + 1
 
     # Try different number of neighbors
     for neighbors in range(min_neighbors, max_neighbors):
         for component in range(min_components, max_components):
             isomap = Isomap(n_neighbors=neighbors, n_components=component)
-            isomap.fit_transform(X)
-            residual_variance = isomap.reconstruction_error()
+            X_isomap = isomap.fit_transform(X)
 
-            if residual_variance < max_residual_variance:
-                print(f"Neighbors: {neighbors}, Component: {component}, \nResidual Variance: {residual_variance}")
+            # Calculate the KNN preservation score
+            knn_preservation_score = knn_preservation(X, X_isomap, neighbors)
 
-                if component < best_component and residual_variance < best_residual_variance:
-                    best_configuration = (neighbors, component, residual_variance)
-                    best_residual_variance = residual_variance
-                    best_component = component
+            # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
+
+            # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
+            if knn_preservation_score >= knn_threshold:
+                if (best_configuration is None or
+                    component < best_configuration[1] or
+                    (component == best_configuration[1] and knn_preservation_score > best_configuration[2]) or
+                    (component == best_configuration[1] and knn_preservation_score == best_configuration[2] and neighbors < best_configuration[0])):
+                    best_configuration = (neighbors, component, knn_preservation_score)
 
     if best_configuration:
-        neighbors, component, residual_variance = best_configuration
-        print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, \nResidual Variance: {residual_variance}")
+        neighbors, component, knn_preservation_score = best_configuration
+        print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
     else:
-        print("No suitable configuration found with residual variance below the specified threshold.")
+        print("No suitable configuration found with KNN preservation score above the threshold.")
 
     return best_configuration
 
@@ -58,8 +75,9 @@ def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
     # Find the best Isomap configuration
     best_isomap_config = find_best_isomap_configuration(X_train)
 
+    
     if best_isomap_config:
-        neighbors, components, residual_variance, preservation_ratio = best_isomap_config
+        neighbors, components, preservation_ratio = best_isomap_config
 
         # Apply Isomap with the best configuration to the training data
         isomap = Isomap(n_neighbors=neighbors, n_components=components)
@@ -102,4 +120,7 @@ folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM, method_None]
 
-process_and_save_data(data_dir, folder_BA11, split_60, method_log)
+for folder in folders:
+    for split in splits:
+        for method in methods:
+            process_and_save_data(data_dir, folder, split, method)

@@ -25,10 +25,14 @@ folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM, method_None]
 
-train_file_name = f"{folder_BA11}_{split_60}_{method_log}_DR_train.csv"
-train_file = os.path.join(data_dir, folder_BA11, DR_Isomap, train_file_name)
-test_file_name = f"{folder_BA11}_{split_60}_{method_log}_DR_test.csv"
-test_file = os.path.join(data_dir, folder_BA11, DR_Isomap, test_file_name)
+# train_file_name = f"{folder_BA11}_{split_60}_{method_log}_DR_train.csv"
+# train_file = os.path.join(data_dir, folder_BA11, DR_Isomap, train_file_name)
+# test_file_name = f"{folder_BA11}_{split_60}_{method_log}_DR_test.csv"
+# test_file = os.path.join(data_dir, folder_BA11, DR_Isomap, test_file_name)
+train_file_name = f"{folder_BA11}_{split_60}_{method_log}_train.csv"
+train_file = os.path.join(data_dir, folder_BA11, train_file_name)
+test_file_name = f"{folder_BA11}_{split_60}_{method_log}_test.csv"
+test_file = os.path.join(data_dir, folder_BA11, test_file_name)
 # Load data
 train_data = pd.read_csv(train_file)
 test_data = pd.read_csv(test_file)

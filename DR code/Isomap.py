@@ -18,7 +18,7 @@ def knn_preservation(X, X_embedded, n_neighbors):
     return preservation_count / (X.shape[0] * n_neighbors)
 
 # Function to find the best Isomap configuration
-def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, knn_threshold=0.8):
+def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, threshold=0.2):
     best_configuration = None
 
     # Try different number of neighbors
@@ -28,21 +28,21 @@ def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_com
             X_isomap = isomap.fit_transform(X)
 
             # Calculate the KNN preservation score
-            knn_preservation_score = knn_preservation(X, X_isomap, neighbors)
-
+            # score = knn_preservation(X, X_isomap, neighbors)
+            score = isomap.reconstruction_error()
             # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
 
             # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
-            if knn_preservation_score >= knn_threshold:
+            if score <= threshold:
                 if (best_configuration is None or
                     component < best_configuration[1] or
-                    (component == best_configuration[1] and knn_preservation_score > best_configuration[2]) or
-                    (component == best_configuration[1] and knn_preservation_score == best_configuration[2] and neighbors < best_configuration[0])):
-                    best_configuration = (neighbors, component, knn_preservation_score)
+                    (component == best_configuration[1] and score < best_configuration[2]) or
+                    (component == best_configuration[1] and score == best_configuration[2] and neighbors < best_configuration[0])):
+                    best_configuration = (neighbors, component, score)
 
     if best_configuration:
-        neighbors, component, knn_preservation_score = best_configuration
-        print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
+        neighbors, component, score = best_configuration
+        print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, score: {score}")
     else:
         print("No suitable configuration found with KNN preservation score above the threshold.")
 

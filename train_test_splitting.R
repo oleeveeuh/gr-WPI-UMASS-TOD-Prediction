@@ -62,7 +62,7 @@ split_train_test <- function(data_list, train_percent, name) {
 
 min_max_normalize <- function(data_list) {
   for (i in 1:2) {
-    for (col in c(2, 4:238)) {
+    for (col in 1:238) {
       data_list[[i]][col] <- (data_list[[i]][col] - min(data_list[[i]][col])) / (max(data_list[[i]][col]) - min(data_list[[i]][col]))
     }
   }
@@ -74,9 +74,10 @@ min_max_normalize <- function(data_list) {
 
 log_normalize <- function(data_list) {
   for (i in 1:2) {
-    for (col in c(2, 4:238)) {
+    for (col in c(3:238)) {
       data_list[[i]][col] <- log(data_list[[i]][col])
     }
+    data_list[[i]][1] <- (data_list[[i]][1] - min(data_list[[i]][1])) / (max(data_list[[i]][1]) - min(data_list[[i]][1]))
   }
   current_names <- names(data_list)
   names_front <- stringr::str_extract(current_names[[1]], "[BA1147full]{4,6}_\\d{2}_")

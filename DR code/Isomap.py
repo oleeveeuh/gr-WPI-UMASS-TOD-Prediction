@@ -18,7 +18,7 @@ def knn_preservation(X, X_embedded, n_neighbors):
     return preservation_count / (X.shape[0] * n_neighbors)
 
 # Function to find the best Isomap configuration
-def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, knn_threshold=0.9):
+def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, knn_threshold=0.8):
     best_configuration = None
 
     # Try different number of neighbors
@@ -64,13 +64,16 @@ def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
     data_train = pd.read_csv(train_file)
     data_test = pd.read_csv(test_file)
 
-    # Define the columns to be reduced (from 'PER3' onwards)
-    numerical_columns_train = data_train.columns[data_train.columns.get_loc(start_col):]
-    numerical_columns_test = data_test.columns[data_test.columns.get_loc(start_col):]
+    # Handle -inf values in the 'sex' column
+    data_train['Sex'].replace(-float('inf'), 1, inplace=True)
+    data_test['Sex'].replace(-float('inf'), 1, inplace=True)
+
+    TOD_train = data_train.pop('TOD_pos')
+    TOD_test = data_test.pop('TOD_pos')
 
     # Extract the relevant columns for dimensionality reduction
-    X_train = data_train[numerical_columns_train].values
-    X_test = data_test[numerical_columns_test].values
+    X_train = data_train.values
+    X_test = data_test.values
 
     # Find the best Isomap configuration
     best_isomap_config = find_best_isomap_configuration(X_train)
@@ -89,9 +92,9 @@ def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
         reduced_train_df = pd.DataFrame(X_train_isomap, columns=reduced_columns)
         reduced_test_df = pd.DataFrame(X_test_isomap, columns=reduced_columns)
 
-        # Concatenate with the original non-reduced columns
-        final_train_df = pd.concat([data_train.iloc[:, :data_train.columns.get_loc(start_col)], reduced_train_df], axis=1)
-        final_test_df = pd.concat([data_test.iloc[:, :data_test.columns.get_loc(start_col)], reduced_test_df], axis=1)
+        # Concatenate with the 'TOD' column
+        final_train_df = pd.concat([TOD_train.reset_index(drop=True), reduced_train_df], axis=1)
+        final_test_df = pd.concat([TOD_test.reset_index(drop=True), reduced_test_df], axis=1)
 
         # Save the resulting DataFrames to new CSV files
         os.makedirs(os.path.dirname(output_train_file), exist_ok=True)

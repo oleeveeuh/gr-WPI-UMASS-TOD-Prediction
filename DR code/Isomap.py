@@ -1,7 +1,12 @@
 from sklearn.manifold import Isomap
 from sklearn.neighbors import NearestNeighbors
+from scipy.sparse import csr_matrix, lil_matrix
 import pandas as pd
 import os
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings('ignore')
 
 # Function to compute KNN preservation
 def knn_preservation(X, X_embedded, n_neighbors):
@@ -18,38 +23,45 @@ def knn_preservation(X, X_embedded, n_neighbors):
     return preservation_count / (X.shape[0] * n_neighbors)
 
 # Function to find the best Isomap configuration
-def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, threshold=0.2):
+def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=40, min_components=2, max_components=100, threshold=0.1):
     best_configuration = None
+    num_features = X.shape[1]
+
+    # Adjust max_components if it exceeds the number of features
+    max_components = min(max_components, num_features)
 
     # Try different number of neighbors
     for neighbors in range(min_neighbors, max_neighbors):
         for component in range(min_components, max_components):
-            isomap = Isomap(n_neighbors=neighbors, n_components=component)
-            X_isomap = isomap.fit_transform(X)
+            try:
+                isomap = Isomap(n_neighbors=neighbors, n_components=component, eigen_solver='dense')
+                X_isomap = isomap.fit_transform(X)
 
-            # Calculate the KNN preservation score
-            # score = knn_preservation(X, X_isomap, neighbors)
-            score = isomap.reconstruction_error()
-            # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
+                # Calculate the KNN preservation score
+                # score = knn_preservation(X, X_isomap, neighbors)
+                score = isomap.reconstruction_error()
+                # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
 
-            # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
-            if score <= threshold:
-                if (best_configuration is None or
-                    component < best_configuration[1] or
-                    (component == best_configuration[1] and score < best_configuration[2]) or
-                    (component == best_configuration[1] and score == best_configuration[2] and neighbors < best_configuration[0])):
-                    best_configuration = (neighbors, component, score)
-
+                # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
+                if score <= threshold:
+                    if (best_configuration is None or
+                        component < best_configuration[1] or
+                        (component == best_configuration[1] and score < best_configuration[2]) or
+                        (component == best_configuration[1] and score == best_configuration[2] and neighbors < best_configuration[0])):
+                        best_configuration = (neighbors, component, score)
+            except ValueError as e:
+                print(f"Failed to fit Isomap with neighbors={neighbors}, components={component}: {e}")
+                doNothing = True
     if best_configuration:
         neighbors, component, score = best_configuration
         print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, score: {score}")
     else:
-        print("No suitable configuration found with KNN preservation score above the threshold.")
+        print("No suitable configuration found with score above the threshold.")
 
     return best_configuration
 
 # Function to process and save data
-def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
+def process_and_save_data(base_dir, folder, split, method):
     # Construct the file paths for train
     train_name = f"{folder}_{split}_{method}_train.csv"
     train_file = os.path.join(base_dir, folder, train_name)
@@ -63,10 +75,6 @@ def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
     # Load the data
     data_train = pd.read_csv(train_file)
     data_test = pd.read_csv(test_file)
-
-    # Handle -inf values in the 'sex' column
-    data_train['Sex'].replace(-float('inf'), 1, inplace=True)
-    data_test['Sex'].replace(-float('inf'), 1, inplace=True)
 
     TOD_train = data_train.pop('TOD_pos')
     TOD_test = data_test.pop('TOD_pos')

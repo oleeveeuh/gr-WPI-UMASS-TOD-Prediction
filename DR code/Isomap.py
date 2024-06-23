@@ -2,6 +2,10 @@ from sklearn.manifold import Isomap
 from sklearn.neighbors import NearestNeighbors
 import pandas as pd
 import os
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings('ignore')
 
 # Function to compute KNN preservation
 def knn_preservation(X, X_embedded, n_neighbors):
@@ -18,38 +22,46 @@ def knn_preservation(X, X_embedded, n_neighbors):
     return preservation_count / (X.shape[0] * n_neighbors)
 
 # Function to find the best Isomap configuration
-def find_best_isomap_configuration(X, min_neighbors=5, max_neighbors=30, min_components=2, max_components=30, knn_threshold=0.9):
+def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_components=2, max_components=48, threshold=0.2):
     best_configuration = None
+    num_features = X.shape[1]
+
+    # Adjust max_components if it exceeds the number of features
+    max_components = min(max_components, num_features)
 
     # Try different number of neighbors
     for neighbors in range(min_neighbors, max_neighbors):
         for component in range(min_components, max_components):
-            isomap = Isomap(n_neighbors=neighbors, n_components=component)
-            X_isomap = isomap.fit_transform(X)
+            try:
+                isomap = Isomap(n_neighbors=neighbors, n_components=component, tol=1e-6)
 
-            # Calculate the KNN preservation score
-            knn_preservation_score = knn_preservation(X, X_isomap, neighbors)
+                X_isomap = isomap.fit_transform(X)
+            
+                # Calculate the KNN preservation score
+                # score = knn_preservation(X, X_isomap, neighbors)
+                score = isomap.reconstruction_error()
+                # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
 
-            # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
-
-            # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
-            if knn_preservation_score >= knn_threshold:
-                if (best_configuration is None or
-                    component < best_configuration[1] or
-                    (component == best_configuration[1] and knn_preservation_score > best_configuration[2]) or
-                    (component == best_configuration[1] and knn_preservation_score == best_configuration[2] and neighbors < best_configuration[0])):
-                    best_configuration = (neighbors, component, knn_preservation_score)
-
+                # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
+                if score <= threshold:
+                    if (best_configuration is None or
+                        component > best_configuration[1] or
+                        (component == best_configuration[1] and score < best_configuration[2]) or
+                        (component == best_configuration[1] and score == best_configuration[2] and neighbors < best_configuration[0])):
+                        best_configuration = (neighbors, component, score)
+            except ValueError as e:
+                print(f"Failed to fit Isomap with neighbors={neighbors}, components={component}: {e}")
+                doNothing = True
     if best_configuration:
-        neighbors, component, knn_preservation_score = best_configuration
-        print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
+        neighbors, component, score = best_configuration
+        print(f"Best Configuration:\nNeighbors: {neighbors}, Component: {component}, score: {score}")
     else:
-        print("No suitable configuration found with KNN preservation score above the threshold.")
+        print("No suitable configuration found with score above the threshold.")
 
     return best_configuration
 
 # Function to process and save data
-def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
+def process_and_save_data(base_dir, folder, split, method):
     # Construct the file paths for train
     train_name = f"{folder}_{split}_{method}_train.csv"
     train_file = os.path.join(base_dir, folder, train_name)
@@ -64,13 +76,12 @@ def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
     data_train = pd.read_csv(train_file)
     data_test = pd.read_csv(test_file)
 
-    # Define the columns to be reduced (from 'PER3' onwards)
-    numerical_columns_train = data_train.columns[data_train.columns.get_loc(start_col):]
-    numerical_columns_test = data_test.columns[data_test.columns.get_loc(start_col):]
+    TOD_train = data_train.pop('TOD_pos')
+    TOD_test = data_test.pop('TOD_pos')
 
     # Extract the relevant columns for dimensionality reduction
-    X_train = data_train[numerical_columns_train].values
-    X_test = data_test[numerical_columns_test].values
+    X_train = data_train.values
+    X_test = data_test.values
 
     # Find the best Isomap configuration
     best_isomap_config = find_best_isomap_configuration(X_train)
@@ -89,9 +100,9 @@ def process_and_save_data(base_dir, folder, split, method, start_col='PER3'):
         reduced_train_df = pd.DataFrame(X_train_isomap, columns=reduced_columns)
         reduced_test_df = pd.DataFrame(X_test_isomap, columns=reduced_columns)
 
-        # Concatenate with the original non-reduced columns
-        final_train_df = pd.concat([data_train.iloc[:, :data_train.columns.get_loc(start_col)], reduced_train_df], axis=1)
-        final_test_df = pd.concat([data_test.iloc[:, :data_test.columns.get_loc(start_col)], reduced_test_df], axis=1)
+        # Concatenate with the 'TOD' column
+        final_train_df = pd.concat([TOD_train.reset_index(drop=True), reduced_train_df], axis=1)
+        final_test_df = pd.concat([TOD_test.reset_index(drop=True), reduced_test_df], axis=1)
 
         # Save the resulting DataFrames to new CSV files
         os.makedirs(os.path.dirname(output_train_file), exist_ok=True)
@@ -124,3 +135,5 @@ for folder in folders:
     for split in splits:
         for method in methods:
             process_and_save_data(data_dir, folder, split, method)
+
+# process_and_save_data(data_dir, folder_BA11, split_60, method_log)

@@ -6,7 +6,7 @@ from math import sqrt
 import os
 
 # All datasets should be in one folder (set path to that folder)
-# For each type (BA11, BA47, Unified), replace all 
+# For each type (BA11, BA11, Unified), replace all 
 # If error or missing file, set index to last position
 path = (r"/Users/olivialiau/Downloads/REUDATA/")
 train_datasets = ['BA11_60_MM_train.csv', 'BA11_60_log_train.csv', 
@@ -49,8 +49,8 @@ for file in train_datasets:
     # Parameter grid for KPCA
     kernels = ['poly']
     gammas = [0.01, 0.1, 1.0, 10.0, 15.0]
-    degrees = [2, 3, 4, 5]
-    n_components = [5, 10, 15, 20, 25, 30]
+    degrees = np.arange(1, 5)
+    n_components = np.arange(2, 20)
 
     # Manual Grid Search (scored by reconstruction error)
     best_score = 1.0000
@@ -75,7 +75,7 @@ for file in train_datasets:
                     except AttributeError as a:
                         print("Error:", a)          
 
-                    if score < best_score:
+                    if abs(score-.05) < abs(best_score-.05):
                         best_score = score
                         best_model = kpca_results
                         apply_model = kpca.transform(X2)
@@ -88,9 +88,9 @@ for file in train_datasets:
     residuals = X - reconstruct
     residual_variance = np.mean(residuals ** 2)
 
-    print("Residual Variance:", residual_variance)
     print("Best parameters found:", best_params)
     print(f'Reconstruction Error (MSE): {best_score}')
+    print("Residual Variance:", residual_variance)
     print(f'R2): {r2}')
     print(f'RMSE): {rmse}')
     print(f'NRMSE): {nrmse}')

@@ -120,7 +120,7 @@ for (name in names(all_dfs)) {
   # Get the dataset
   dataset <- all_dfs[[name]]
   # Create the file name
-  file_name <- paste0("data/train test split data/", name, ".csv")
+  file_name <- paste0("data/train_test_split_data/", name, ".csv")
   # Write the dataset to a CSV file
   write.csv(dataset, file = file_name, row.names = FALSE)
 }

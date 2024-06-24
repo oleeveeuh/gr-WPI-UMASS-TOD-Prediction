@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
-import pca_script
 from xgboost import XGBRegressor
 import os
 

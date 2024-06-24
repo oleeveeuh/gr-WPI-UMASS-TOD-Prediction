@@ -6,15 +6,15 @@ from math import sqrt
 import os
 
 # All datasets should be in one folder (set path to that folder)
-# For each type (BA11, BA11, Unified), replace all 
+# For each type (full, full, Unified), replace all 
 # If error or missing file, set index to last position
-path = (r"/Users/olivialiau/Downloads/REUDATA/")
-train_datasets = ['BA11_60_MM_train.csv', 'BA11_60_log_train.csv', 
-                  'BA11_70_MM_train.csv', 'BA11_70_log_train.csv',
-                  'BA11_80_MM_train.csv', 'BA11_80_log_train.csv']
-test_datasets = ['BA11_60_MM_test.csv', 'BA11_60_log_test.csv', 
-                 'BA11_70_MM_test.csv', 'BA11_70_log_test.csv',
-                 'BA11_80_MM_test.csv', 'BA11_80_log_test.csv']
+path = (r"/Users/olivialiau/Downloads/REUDATA/full_data")
+train_datasets = ['full_60_MM_train.csv', 'full_60_log_train.csv', 
+                  'full_70_MM_train.csv', 'full_70_log_train.csv',
+                  'full_80_MM_train.csv', 'full_80_log_train.csv']
+test_datasets = ['full_60_MM_test.csv', 'full_60_log_test.csv', 
+                 'full_70_MM_test.csv', 'full_70_log_test.csv',
+                 'full_80_MM_test.csv', 'full_80_log_test.csv']
 i = 0
 
 # Perform for each pair of train/test datasets
@@ -75,7 +75,7 @@ for file in train_datasets:
                     except AttributeError as a:
                         print("Error:", a)          
 
-                    if abs(score-.05) < abs(best_score-.05):
+                    if abs(score-.10) < abs(best_score-.10):
                         best_score = score
                         best_model = kpca_results
                         apply_model = kpca.transform(X2)

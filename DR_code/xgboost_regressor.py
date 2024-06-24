@@ -4,6 +4,46 @@ from sklearn.model_selection import RandomizedSearchCV
 from sklearn.metrics import mean_squared_error
 import pca_script
 from xgboost import XGBRegressor
+import os
+
+# get the path to data
+script_dir = os.path.dirname(__file__)
+data_dir = os.path.join(script_dir, '..', 'data', 'train_test_split_data')
+data_dir = os.path.normpath(data_dir)
+
+# folder names
+folder_BA11 = 'BA11'
+folder_BA47 = 'BA47'
+split_60 = '60'
+split_70 = '70'
+split_80 = '80'
+method_log = 'log'
+method_MM = 'MM'
+method_None = 'nonnormalized'
+DR_Isomap = "Isomap"
+
+folders = [folder_BA11, folder_BA47]
+splits = [split_60, split_70, split_80]
+methods = [method_log, method_MM, method_None]
+DR_folders = ['ICA_90', 'ICA_95', 'KPCA_95', 'KPCA_90', 'PCA_90', 'PCA_95']
+use_reduce = True
+
+train_name = 'BA11_60_log_ICA_90_train.csv'
+test_name = 'BA11_60_log_ICA_90_test.csv'
+
+train_path = os.path.join(data_dir, DR_folders[0], train_name)
+test_path = os.path.join(data_dir, DR_folders[0], test_name)
+
+ # Load data
+train_data = pd.read_csv(train_path)
+test_data = pd.read_csv(test_path)
+
+# Preprocess data
+y_train = train_data.pop('TOD')
+X_train = train_data
+
+y_test = test_data.pop('TOD')
+X_test = test_data
 
 xgb_model = XGBRegressor(
     objective='reg:squarederror',

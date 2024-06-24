@@ -74,7 +74,7 @@ def reduce_and_save(input_train_csv, output_train_csv, input_test_csv, output_te
 
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', 'data', 'train test split data')
+data_dir = os.path.join(script_dir, '..', 'data', 'train_test_split_data')
 data_dir = os.path.normpath(data_dir)
 
 # folder names

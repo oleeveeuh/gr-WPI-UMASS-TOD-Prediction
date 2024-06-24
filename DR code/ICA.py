@@ -5,20 +5,35 @@ import fnmatch
 import re
 import pandas as pd
 
-BA11 = "data/train test split data/BA11"
-BA47 = "data/train test split data/BA47"
-full_data = "data/train test split data/full data"
+BA11 = "../data/train test split data/BA11"
+BA47 = "../data/train test split data/BA47"
+full_data = "../data/train test split data/full data"
 
 folder_list = [BA11, BA47, full_data]
 data_dict = {}
 file_names = []
+TOD_dict = {}
+regions = ["BA11", "BA47", "full"]
+splits = ["80", "70", "60"]
+
 for subfolder in folder_list:
     for file in os.listdir(subfolder):
         if fnmatch.fnmatch(file, '*.csv'):
             name = re.match(".+(?=_(train)|_(test)\.csv)", file)
             file_names.append(name.group())
-            data_dict[file] = np.genfromtxt(subfolder + "/" + file, delimiter=',', skip_header=1)
+            data_dict[file] = pd.DataFrame(np.genfromtxt(subfolder + "/" + file, delimiter=',', skip_header=1))
+            for region in regions:
+                for split in splits:
+                    if ((region + "_train" not in TOD_dict.keys()) & (region in file) & (split in file) & ("train" in file)):
+                        TOD_dict[region + "_" + split + "_train"] = data_dict[file][2]
+                    elif ((region + "_test" not in TOD_dict.keys()) & (region in file) & (split in file) & ("test" in file)):
+                        TOD_dict[region + "_" + split + "_test"] = data_dict[file][2]
+
 file_names = list(set(file_names))
+
+#check TOD split lengths
+for tod in TOD_dict.keys():
+    print("Length of ", tod, ": ", len(TOD_dict[tod]))
 
 final_data_grouping = {}
 for key in data_dict.keys():
@@ -38,10 +53,10 @@ for data_group in final_data_grouping.keys():
 for data_group in list(final_data_grouping.keys()):
     for dataset in final_data_grouping[data_group].keys():
         if "train" in dataset:
-            to_DR_train = np.delete(final_data_grouping[data_group][dataset], 3, axis=1)
+            to_DR_train = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)
             train_name = dataset
         else:
-            to_DR_test = np.delete(final_data_grouping[data_group][dataset], 3, axis=1)
+            to_DR_test = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)
             test_name = dataset
     ica_test = FastICA(n_components=100, algorithm='parallel', whiten=True)
     S_ica_test = ica_test.fit_transform(to_DR_train)  # Get the independent components from training data
@@ -60,11 +75,20 @@ for data_group in list(final_data_grouping.keys()):
     S_ica_90_train = pd.DataFrame(ica_90.fit_transform(to_DR_train))
     S_ica_90_test = pd.DataFrame(ica_90.transform(to_DR_test))
 
+
     #write to csv files
-    train_file_name_95 = "data/train test split data/ICA (95%)/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
-    test_file_name_95 = "data/train test split data/ICA (95%)/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
-    train_file_name_90 = "data/train test split data/ICA (90%)/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
-    test_file_name_90 = "data/train test split data/ICA (90%)/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+    train_file_name_95 = "../data/train test split data/ICA (95%)/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
+    test_file_name_95 = "../data/train test split data/ICA (95%)/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
+    train_file_name_90 = "../data/train test split data/ICA (90%)/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
+    test_file_name_90 = "../data/train test split data/ICA (90%)/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+
+    for region in regions:
+        for split in splits:
+            if ((region in train_file_name_95) & (split in train_file_name_95)):
+                S_ica_95_train['TOD'] = TOD_dict[region + "_" + split + "_train"]
+                S_ica_95_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
+                S_ica_90_train['TOD'] = TOD_dict[region + "_" + split + "_train"]
+                S_ica_90_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
 
     S_ica_95_train.to_csv(train_file_name_95, index=False)
     S_ica_95_test.to_csv(test_file_name_95, index=False)

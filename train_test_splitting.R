@@ -61,10 +61,13 @@ split_train_test <- function(data_list, train_percent, name) {
 }
 
 min_max_normalize <- function(data_list) {
-  for (i in 1:2) {
-    for (col in 1:238) {
-      data_list[[i]][col] <- (data_list[[i]][col] - min(data_list[[1]][col])) / (max(data_list[[1]][col]) - min(data_list[[1]][col]))
-    }
+  for (col in 1:238) {
+    min <- min(data_list[[1]][col])
+    max <- max(data_list[[1]][col])
+    data_list[[1]][col] <- (data_list[[1]][col] - min) / (max - min)
+    data_list[[1]][col] <- (data_list[[1]][col] - min) / (max - min)
+    data_list[[2]][col] <- (data_list[[2]][col] - min) / (max - min)
+    data_list[[2]][col] <- (data_list[[2]][col] - min) / (max - min)
   }
   current_names <- names(data_list)
   names_front <- stringr::str_extract(current_names[[1]], "[BA1147full]{4,6}_\\d{2}_")
@@ -77,11 +80,14 @@ log_normalize <- function(data_list) {
     for (col in c(3:238)) {
       data_list[[i]][col] <- log(data_list[[i]][col])
     }
-    data_list[[i]][1] <- (data_list[[i]][1] - min(data_list[[1]][1])) / (max(data_list[[1]][1]) - min(data_list[[1]][1]))
   }
+  min <- min(data_list[[1]][1])
+  max <- max(data_list[[1]][1])
+  data_list[[1]][1] <- (data_list[[1]][1] - min )/ (max - min)
+  data_list[[2]][1] <- (data_list[[2]][1] - min )/ (max - min)
   current_names <- names(data_list)
   names_front <- stringr::str_extract(current_names[[1]], "[BA1147full]{4,6}_\\d{2}_")
-  names(data_list) <- c(paste0(names_front, "log_train"), (paste0(names_front, "log_test")))
+  names(data_list) <- c(paste0(names_front, "log_train"), paste0(names_front, "log_test"))
   return(data_list)
 }
 

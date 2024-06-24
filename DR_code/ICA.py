@@ -5,9 +5,9 @@ import fnmatch
 import re
 import pandas as pd
 
-BA11 = "../data/train test split data/BA11"
-BA47 = "../data/train test split data/BA47"
-full_data = "../data/train test split data/full data"
+BA11 = "../data/train_test_split_data/BA11"
+BA47 = "../data/train_test_split_data/BA47"
+full_data = "../data/train_test_split data/full_data"
 
 folder_list = [BA11, BA47, full_data]
 data_dict = {}
@@ -77,10 +77,10 @@ for data_group in list(final_data_grouping.keys()):
 
 
     #write to csv files
-    train_file_name_95 = "../data/train test split data/ICA (95%)/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
-    test_file_name_95 = "../data/train test split data/ICA (95%)/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
-    train_file_name_90 = "../data/train test split data/ICA (90%)/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
-    test_file_name_90 = "../data/train test split data/ICA (90%)/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+    train_file_name_95 = "../data/train_test_split_data/ICA_95/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
+    test_file_name_95 = "../data/train_test_split_data/ICA_95/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
+    train_file_name_90 = "../data/train_test_split_data/ICA_90/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
+    test_file_name_90 = "../data/train_test_split_data/ICA_90/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
 
     for region in regions:
         for split in splits:

@@ -6,9 +6,13 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV, KFold
 import matplotlib.pyplot as plt
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings('ignore')
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', '..', 'data', 'train test split data')
+data_dir = os.path.join(script_dir, '..', '..', 'data', 'train_test_split_data')
 data_dir = os.path.normpath(data_dir)
 
 # folder names
@@ -26,12 +30,12 @@ folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM, method_None]
 
-
+DR_folders = ['ICA_90', 'ICA_95', 'KPCA_95', 'KPCA_90', 'PCA_90', 'PCA_95']
 
 def process_folder(folder):
     folder_path = os.path.join(data_dir, folder)
-    train_files = [f for f in os.listdir(folder_path) if 'train' in f]
-    test_files = [f for f in os.listdir(folder_path) if 'test' in f]
+    train_files = [f for f in os.listdir(folder_path) if 'train' in f and 'nonnormalized' not in f]
+    test_files = [f for f in os.listdir(folder_path) if 'test' in f and 'nonnormalized' not in f]
     
     results = {'mse': [], 'r2': [], 'files': []}
     for train_file, test_file in zip(train_files, test_files):
@@ -57,7 +61,7 @@ def process_folder(folder):
         X_test.fillna(X_test.mean(), inplace=True)
 
         # Define the SVM model
-        svm = SVR()
+        svm = SVR(max_iter=10000)
 
         # Define the parameter grid for RandomizedSearchCV
         param_grid = {
@@ -73,7 +77,7 @@ def process_folder(folder):
 
         # Set up k-fold cross-validation with random search
         kf = KFold(n_splits=5, shuffle=True, random_state=42)
-        random_search = RandomizedSearchCV(pipeline, param_distributions=param_grid, n_iter=10, cv=kf, verbose=1, n_jobs=-1)
+        random_search = RandomizedSearchCV(pipeline, param_distributions=param_grid, n_iter=10, cv=kf, verbose=1, n_jobs=-1, random_state=42)
 
         # Fit the model
         random_search.fit(X_train, y_train)
@@ -87,6 +91,7 @@ def process_folder(folder):
         # Evaluate the model
         mse = mean_squared_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
+        print(f"File {test_file}")
         print(f"Mean Squared Error: {mse}")
         print(f"R^2 Score: {r2}")
 
@@ -98,7 +103,7 @@ def process_folder(folder):
 
     return results
 
-folder = 'KPCA(90%)'
+folder = 'KPCA_95'
 result = process_folder(folder)
 
 # Plot the results
@@ -135,3 +140,12 @@ axes[1].legend()
 
 plt.tight_layout()
 plt.show()
+
+# Output summary
+summary = []
+
+for file, mse, r2 in zip(result['files'], result['mse'], result['r2']):
+    summary.append(f"SVR - {file}: MSE = {mse}, R^2 = {r2}")
+
+summary_text = "\n".join(summary)
+print("Summary:\n", summary_text)

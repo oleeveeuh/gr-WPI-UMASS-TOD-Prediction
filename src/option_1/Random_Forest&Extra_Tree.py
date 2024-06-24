@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', '..', 'data', 'train test split data')
+data_dir = os.path.join(script_dir, '..', '..', 'data', 'train_test_split_data')
 data_dir = os.path.normpath(data_dir)
 
 # folder names
@@ -27,7 +27,7 @@ DR_ICA = 'ICA'
 DR_PCA = 'PCA'
 
 folders = [folder_BA11, folder_BA47]
-DR_folders = ['ICA (90%)', 'ICA (95%)', 'KPCA (95%)', 'KPCA(90%)', 'PCA (90%)', 'PCA (95%)']
+DR_folders = ['ICA_90', 'ICA_95', 'KPCA_95', 'KPCA_90', 'PCA_90', 'PCA_95']
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM, method_None]
 value = [90, 95]
@@ -48,8 +48,8 @@ else:
 # Function to load data and train models
 def process_folder(folder):
     folder_path = os.path.join(data_dir, folder)
-    train_files = [f for f in os.listdir(folder_path) if 'train' in f]
-    test_files = [f for f in os.listdir(folder_path) if 'test' in f]
+    train_files = [f for f in os.listdir(folder_path) if 'train' in f and 'nonnormalized' not in f]
+    test_files = [f for f in os.listdir(folder_path) if 'test' in f and 'nonnormalized' not in f]
     
     results = {'RandomForest': {'mse': [], 'r2': [], 'files': []}, 'ExtraTrees': {'mse': [], 'r2': [], 'files': []}}
     for train_file, test_file in zip(train_files, test_files):
@@ -61,23 +61,16 @@ def process_folder(folder):
         test_data = pd.read_csv(test_file_path)
         
         # Preprocess data
-        y_train = train_data.pop('TOD')
+        y_train = train_data.pop('TOD_pos')
         X_train = train_data
 
-        y_test = test_data.pop('TOD')
+        y_test = test_data.pop('TOD_pos')
         X_test = test_data
-
-        # Handle infinite and too large values
-        X_train.replace([np.inf, -np.inf], np.nan, inplace=True)
-        X_test.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-        X_train.fillna(X_train.mean(), inplace=True)
-        X_test.fillna(X_test.mean(), inplace=True)
 
         # Define models
         models = {
-            'RandomForest': RandomForestRegressor(),
-            'ExtraTrees': ExtraTreesRegressor()
+            'RandomForest': RandomForestRegressor(random_state=42),
+            'ExtraTrees': ExtraTreesRegressor(random_state=42)
         }
 
         # Define parameter grids for RandomizedSearchCV
@@ -106,7 +99,7 @@ def process_folder(folder):
 
             # Set up k-fold cross-validation with random search
             kf = KFold(n_splits=5, shuffle=True, random_state=42)
-            random_search = RandomizedSearchCV(pipeline, param_distributions=param_grids[model_name], n_iter=10, cv=kf, verbose=1, n_jobs=-1)
+            random_search = RandomizedSearchCV(pipeline, param_distributions=param_grids[model_name], n_iter=10, cv=kf, verbose=1, n_jobs=-1, random_state=42)
 
             # Fit the model
             random_search.fit(X_train, y_train)
@@ -134,7 +127,7 @@ def process_folder(folder):
 # Process each folder
 # for folder in DR_folders:
 #     process_folder(folder)
-folder = 'KPCA(90%)'
+folder = 'BA11/PCA95'
 result = process_folder(folder)
 
 # Plot the results
@@ -172,3 +165,12 @@ axes[1].legend()
 
 plt.tight_layout()
 plt.show()
+
+# Output summary
+summary = []
+for model_name in ['RandomForest', 'ExtraTrees']:
+    for file, mse, r2 in zip(result[model_name]['files'], result[model_name]['mse'], result[model_name]['r2']):
+        summary.append(f"{model_name} - {file}: MSE = {mse}, R^2 = {r2}")
+
+summary_text = "\n".join(summary)
+print("Summary:\n", summary_text)

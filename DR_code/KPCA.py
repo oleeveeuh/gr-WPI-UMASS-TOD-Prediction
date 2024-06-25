@@ -8,7 +8,7 @@ import os
 # All datasets should be in one folder (set path to that folder)
 # For each type (full, full, Unified), replace all 
 # If error or missing file, set index to last position
-path = (r"/Users/olivialiau/Downloads/REUDATA/full_data")
+path = (r"/Users/olivialiau/Documents/gr-WPI-UMASS-TOD-Project/data/train_test_split_data/full_data")
 train_datasets = ['full_60_MM_train.csv', 'full_60_log_train.csv', 
                   'full_70_MM_train.csv', 'full_70_log_train.csv',
                   'full_80_MM_train.csv', 'full_80_log_train.csv']
@@ -41,8 +41,8 @@ for file in train_datasets:
     # Import, drop TOD, convert to array
     df = pd.read_csv(test_path_in)
     df2 = pd.read_csv(train_path_in)
-    df_filtered = (df.drop(columns=['TOD_pos']))
-    df_filtered2 = (df2.drop(columns=['TOD_pos']))
+    df_filtered = (df.drop(columns=['TOD']))
+    df_filtered2 = (df2.drop(columns=['TOD']))
     X = df_filtered.to_numpy()
     X2 = df_filtered2.to_numpy()
 
@@ -63,7 +63,7 @@ for file in train_datasets:
         for gamma in gammas:
             for degree in degrees:
                 for component in n_components:
-                    kpca = KernelPCA(kernel=kernel, gamma=gamma, degree=degree, n_components=component, random_state=None, fit_inverse_transform=True)
+                    kpca = KernelPCA(kernel=kernel, gamma=gamma, degree=degree, n_components=component, random_state=42, fit_inverse_transform=True)
                     kpca_results = None
                     score = 1
                     try:
@@ -75,7 +75,7 @@ for file in train_datasets:
                     except AttributeError as a:
                         print("Error:", a)          
 
-                    if abs(score-.10) < abs(best_score-.10):
+                    if (abs(score-.05) < abs(best_score-.05)):
                         best_score = score
                         best_model = kpca_results
                         apply_model = kpca.transform(X2)
@@ -97,13 +97,13 @@ for file in train_datasets:
 
     finaltraindf = pd.DataFrame(best_model)
     finaltestdf = pd.DataFrame(apply_model)
-    finaltraindf['TOD'] = df['TOD_pos']
-    finaltestdf['TOD'] = df2['TOD_pos']
+    finaltraindf['TOD'] = df['TOD']
+    finaltestdf['TOD'] = df2['TOD']
 
     out_directory = (r"/Users/olivialiau/Downloads/KPCADATA/")
     os.makedirs(out_directory, exist_ok=True)
-    train_file_out = ("KPCA_" + train_file_in)
-    test_file_out = ("KPCA_" + test_file_in)
+    train_file_out = (train_file_in[:11] + "KPCA_95_train.csv")
+    test_file_out = (test_file_in[:11] + "KPCA_95_test.csv")
     train_file_path = os.path.join(out_directory, train_file_out)
     test_file_path = os.path.join(out_directory, test_file_out)
     finaltraindf.to_csv(train_file_path, index=False)

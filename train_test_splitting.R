@@ -123,7 +123,7 @@ for (df in names(all_dfs)) {
 }
 
 for (df in names(all_dfs)) {
-  names(df)[names(df) == 'TOD_pos'] <- 'TOD'
+  names(all_dfs[[df]])[names(all_dfs[[df]]) == 'TOD_pos'] <- 'TOD'
 }
 
 

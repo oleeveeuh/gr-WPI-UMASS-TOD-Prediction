@@ -7,7 +7,7 @@ import pandas as pd
 
 BA11 = "../data/train_test_split_data/BA11"
 BA47 = "../data/train_test_split_data/BA47"
-full_data = "../data/train_test_split data/full_data"
+full_data = "../data/train_test_split_data/full_data"
 
 folder_list = [BA11, BA47, full_data]
 data_dict = {}
@@ -77,10 +77,10 @@ for data_group in list(final_data_grouping.keys()):
 
 
     #write to csv files
-    train_file_name_95 = "../data/train_test_split_data/ICA_95/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
-    test_file_name_95 = "../data/train_test_split_data/ICA_95/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
-    train_file_name_90 = "../data/train_test_split_data/ICA_90/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
-    test_file_name_90 = "../data/train_test_split_data/ICA_90/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+    train_file_name_95 = "../data/reduced_data/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
+    test_file_name_95 = "../data/reduced_data/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
+    train_file_name_90 = "../data/reduced_data/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
+    test_file_name_90 = "../data/reduced_data/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
 
     for region in regions:
         for split in splits:
@@ -89,6 +89,7 @@ for data_group in list(final_data_grouping.keys()):
                 S_ica_95_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
                 S_ica_90_train['TOD'] = TOD_dict[region + "_" + split + "_train"]
                 S_ica_90_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
+
 
     S_ica_95_train.to_csv(train_file_name_95, index=False)
     S_ica_95_test.to_csv(test_file_name_95, index=False)

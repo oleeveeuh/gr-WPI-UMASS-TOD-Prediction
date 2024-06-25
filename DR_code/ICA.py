@@ -51,6 +51,8 @@ for data_group in final_data_grouping.keys():
 
 # Assuming final_data_grouping is already populated
 for data_group in list(final_data_grouping.keys()):
+    if "nonnormalized" in data_group:
+        continue
     for dataset in final_data_grouping[data_group].keys():
         if "train" in dataset:
             to_DR_train = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)

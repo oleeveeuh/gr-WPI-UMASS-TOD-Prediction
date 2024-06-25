@@ -22,13 +22,13 @@ def knn_preservation(X, X_embedded, n_neighbors):
     return preservation_count / (X.shape[0] * n_neighbors)
 
 # Function to find the best Isomap configuration
-def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_components=2, max_components=48, threshold=0.2):
+def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_components=10, max_components=56, threshold=0.2):
     best_configuration = None
     num_features = X.shape[1]
 
     # Adjust max_components if it exceeds the number of features
     max_components = min(max_components, num_features)
-
+    min_score = 99.0
     # Try different number of neighbors
     for neighbors in range(min_neighbors, max_neighbors):
         for component in range(min_components, max_components):
@@ -43,12 +43,13 @@ def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_co
                 # print(f"Neighbors: {neighbors}, Component: {component}, KNN Preservation: {knn_preservation_score}")
 
                 # Update best configuration based on criteria: knn_preservation > knn_threshold, then smaller component, then smaller neighbors
-                if score <= threshold:
+                if score <= min_score:
                     if (best_configuration is None or
                         component > best_configuration[1] or
                         (component == best_configuration[1] and score < best_configuration[2]) or
                         (component == best_configuration[1] and score == best_configuration[2] and neighbors < best_configuration[0])):
                         best_configuration = (neighbors, component, score)
+                        min_score = score
             except ValueError as e:
                 print(f"Failed to fit Isomap with neighbors={neighbors}, components={component}: {e}")
                 doNothing = True
@@ -62,22 +63,32 @@ def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_co
 
 # Function to process and save data
 def process_and_save_data(base_dir, folder, split, method):
+    
     # Construct the file paths for train
     train_name = f"{folder}_{split}_{method}_train.csv"
+    test_name = f"{folder}_{split}_{method}_test.csv"
+    output_train_file = os.path.join(base_dir, '..','reduced_data', f"{folder}_{split}_{method}_Isomap_90_train.csv")
+    output_test_file = os.path.join(base_dir, '..','reduced_data', f"{folder}_{split}_{method}_Isomap_90_test.csv")
+
+    if folder == folder_full:
+        train_name = f"full_{split}_{method}_train.csv"
+        test_name = f"full_{split}_{method}_test.csv"
+        output_train_file = os.path.join(base_dir, '..','reduced_data', f"full_{split}_{method}_Isomap_90_train.csv")
+        output_test_file = os.path.join(base_dir, '..','reduced_data', f"full_{split}_{method}_Isomap_90_test.csv")
+
     train_file = os.path.join(base_dir, folder, train_name)
-    output_train_file = os.path.join(base_dir, folder, 'Isomap', f"{folder}_{split}_{method}_DR_train.csv")
+    
 
     # file path for test
-    test_name = f"{folder}_{split}_{method}_test.csv"
     test_file = os.path.join(base_dir, folder, test_name)
-    output_test_file = os.path.join(base_dir, folder, 'Isomap', f"{folder}_{split}_{method}_DR_test.csv")
+    
     
     # Load the data
     data_train = pd.read_csv(train_file)
     data_test = pd.read_csv(test_file)
 
-    TOD_train = data_train.pop('TOD_pos')
-    TOD_test = data_test.pop('TOD_pos')
+    TOD_train = data_train.pop('TOD')
+    TOD_test = data_test.pop('TOD')
 
     # Extract the relevant columns for dimensionality reduction
     X_train = data_train.values
@@ -114,12 +125,13 @@ def process_and_save_data(base_dir, folder, split, method):
 
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', 'data', 'train test split data')
+data_dir = os.path.join(script_dir, '..', 'data', 'train_test_split_data')
 data_dir = os.path.normpath(data_dir)
 
 # folder names
 folder_BA11 = 'BA11'
 folder_BA47 = 'BA47'
+folder_full = 'full_data'
 split_60 = '60'
 split_70 = '70'
 split_80 = '80'
@@ -127,13 +139,14 @@ method_log = 'log'
 method_MM = 'MM'
 method_None = 'nonnormalized'
 
-folders = [folder_BA11, folder_BA47]
+folders = [folder_BA11, folder_BA47, folder_full]
 splits = [split_60, split_70, split_80]
-methods = [method_log, method_MM, method_None]
+methods = [method_log, method_MM]
 
-for folder in folders:
-    for split in splits:
-        for method in methods:
-            process_and_save_data(data_dir, folder, split, method)
-
-# process_and_save_data(data_dir, folder_BA11, split_60, method_log)
+# for folder in folders:
+#     for split in splits:
+#         for method in methods:
+#             process_and_save_data(data_dir, folder, split, method)
+for split in splits:
+    for method in methods:
+        process_and_save_data(data_dir, folder_full, split, method)

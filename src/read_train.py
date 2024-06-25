@@ -200,6 +200,59 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
 
     return results_df
 
+def write_results_to_excel(results, verbose=False):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_file = os.path.join(data_dir, f'model_results_{timestamp}.xlsx')
+    
+    # Initialize ExcelWriter
+    writer = pd.ExcelWriter(results_file, engine='xlsxwriter')
+    workbook = writer.book
+    
+    # Define headers for the results
+    headers = [
+        'Model Parameter (Grid/Random) Search Methods',
+        'Best Set of Parameters',
+        'Mean squared error',
+        'Mean absolute error',
+        'Mean absolute percentage error',
+        'Root mean squared error',
+        'Symmetric mean absolute percentage error'
+    ]
+    
+    # Group results by sheet name
+    grouped_results = {}
+    for result in results:
+        sheet_name = f"{result['Target'].name}_{result['Split'].name}_{result['Normalize_Method'].name}_{result['DR_Method'].name}_{result['Variance'].name}"
+        if sheet_name not in grouped_results:
+            grouped_results[sheet_name] = []
+        grouped_results[sheet_name].append(result)
+    
+    for sheet_name, sheet_results in grouped_results.items():
+        results_df = pd.DataFrame(sheet_results)
+        results_df.drop(columns=['Target', 'Split', 'Normalize_Method', 'DR_Method', 'Variance'], inplace=True)
+        results_df.rename(columns={
+            'Model': 'Model Parameter (Grid/Random) Search Methods',
+            'Param_Names': 'Model Parameter (Grid/Random) Search Methods',
+            'Best_Params': 'Best Set of Parameters',
+            'MSE': 'Mean squared error',
+            'MAE': 'Mean absolute error',
+            'MAPE': 'Mean absolute percentage error',
+            'RMSE': 'Root mean squared error',
+            'SMAPE': 'Symmetric mean absolute percentage error'
+        }, inplace=True)
+        results_df.to_excel(writer, index=False, sheet_name=sheet_name)
+        
+        # Apply formatting (optional)
+        worksheet = writer.sheets[sheet_name]
+        for i, header in enumerate(headers, 1):
+            worksheet.write(0, i, header)
+    
+    # Save and close the ExcelWriter
+    writer.save()
+    
+    if verbose:
+        print(f"Results saved to {results_file}")
+
 
 
 if __name__ == "__main__":

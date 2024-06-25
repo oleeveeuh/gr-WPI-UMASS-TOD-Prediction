@@ -113,15 +113,19 @@ for (i in 1:3) {
 all_dfs <- unlist(unlist(output, recursive = FALSE), recursive = FALSE)
 
 for (df in names(all_dfs)) {
-  if (grepl("train", df) && grepl("MM", df)) {
+  if (grepl("train", df)) {
     for (col in colnames(all_dfs[[df]])) {
-      print(max(all_dfs[[df]][col]))
-      if (max(all_dfs[[df]][col]) > 1) {
-        cat("WARNING: ",df, col, " has a maximum value of ", max(all_dfs[[df]][col]), " not 1\n")
+      if (min(all_dfs[[df]][col]) < 0) {
+        cat("WARNING: ",df, col, " has a minimum value of ", min(all_dfs[[df]][col]), " not 0\n")
       }
     }
   }
 }
+
+for (df in names(all_dfs)) {
+  names(df)[names(df) == 'TOD_pos'] <- 'TOD'
+}
+
 
 
 save(all_dfs, file = "data/all_dfs.RData")

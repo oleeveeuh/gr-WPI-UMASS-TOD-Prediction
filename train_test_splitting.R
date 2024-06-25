@@ -1,7 +1,7 @@
 # Load in data
-full_data <- read.csv("data/wrangled data/full_data_6_17_2024.csv")
-BA_11 <- read.csv("data/wrangled data/BA11_data_6_17_2024.csv")
-BA_47 <- read.csv("data/wrangled data/BA47_data_6_17_2024.csv")
+full_data <- read.csv("data/wrangled_data/full_data_6_17_2024.csv")
+BA_11 <- read.csv("data/wrangled_data/BA11_data_6_17_2024.csv")
+BA_47 <- read.csv("data/wrangled_data/BA47_data_6_17_2024.csv")
 
 
 # Splits a dataframe into a list of dataframes based on the TOD. Each list-item contains the values
@@ -65,8 +65,6 @@ min_max_normalize <- function(data_list) {
     min <- min(data_list[[1]][col])
     max <- max(data_list[[1]][col])
     data_list[[1]][col] <- (data_list[[1]][col] - min) / (max - min)
-    data_list[[1]][col] <- (data_list[[1]][col] - min) / (max - min)
-    data_list[[2]][col] <- (data_list[[2]][col] - min) / (max - min)
     data_list[[2]][col] <- (data_list[[2]][col] - min) / (max - min)
   }
   current_names <- names(data_list)
@@ -76,10 +74,9 @@ min_max_normalize <- function(data_list) {
 }
 
 log_normalize <- function(data_list) {
-  for (i in 1:2) {
-    for (col in c(3:238)) {
-      data_list[[i]][col] <- log(data_list[[i]][col])
-    }
+  for (col in c(3:238)) {
+    data_list[[1]][col] <- log(data_list[[1]][col])
+    data_list[[2]][col] <- log(data_list[[2]][col])
   }
   min <- min(data_list[[1]][1])
   max <- max(data_list[[1]][1])
@@ -114,6 +111,19 @@ for (i in 1:3) {
 }
 
 all_dfs <- unlist(unlist(output, recursive = FALSE), recursive = FALSE)
+
+for (df in names(all_dfs)) {
+  if (grepl("train", df) && grepl("MM", df)) {
+    for (col in colnames(all_dfs[[df]])) {
+      print(max(all_dfs[[df]][col]))
+      if (max(all_dfs[[df]][col]) > 1) {
+        cat("WARNING: ",df, col, " has a maximum value of ", max(all_dfs[[df]][col]), " not 1\n")
+      }
+    }
+  }
+}
+
+
 save(all_dfs, file = "data/all_dfs.RData")
 
 for (name in names(all_dfs)) {
@@ -124,3 +134,4 @@ for (name in names(all_dfs)) {
   # Write the dataset to a CSV file
   write.csv(dataset, file = file_name, row.names = FALSE)
 }
+

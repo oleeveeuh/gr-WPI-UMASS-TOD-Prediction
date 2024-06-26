@@ -1,3 +1,0 @@
-target,split,n_method,dr_method,variance,model,parameter_search,best_params,mse,mae,mape,rmse,smape
-Target.BA11,Split.S60,Normalize_Method.Log,DR_Method.ICA,Variance.V90,RandomForest,"['n_estimators', 'max_depth', 'min_samples_split', 'min_samples_leaf']","{'n_estimators': 100, 'min_samples_split': 5, 'min_samples_leaf': 4, 'max_depth': 10}",184.31312697346686,13.510719361912217,1760.6384758810934,13.576197073314267,199.27190675663698
-Target.BA11,Split.S60,Normalize_Method.Log,DR_Method.ICA,Variance.V90,ExtraTrees,"['n_estimators', 'max_depth', 'min_samples_split', 'min_samples_leaf']","{'n_estimators': 50, 'min_samples_split': 10, 'min_samples_leaf': 1, 'max_depth': 30}",159.99873289687727,12.41742212646909,1514.186263286747,12.649060553925626,199.21295071715807

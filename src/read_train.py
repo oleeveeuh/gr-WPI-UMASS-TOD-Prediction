@@ -3,6 +3,7 @@ from itertools import product
 from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
+import openpyxl
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -40,7 +41,8 @@ split_map = {Split.S60: '60', Split.S70: '70', Split.S80: '80'}
 n_method_map = {Normalize_Method.Log: 'log', Normalize_Method.MM: 'MM', Normalize_Method.NN: 'nonnormalized'}
 dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KPCA', DR_Method.Isomap: 'Isomap'}
 variance_map = {Variance.V90: '90', Variance.V95: '95'}
-
+excel_method_to_file = {'Log':'log', 'MinMax':'MM'}
+RANDOM_STATE = 42
 # get the path to data
 script_dir = os.path.dirname(__file__)
 data_dir = os.path.join(script_dir, '..', 'data', 'reduced_data')
@@ -90,8 +92,14 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     # Generate all combinations
     all_combinations = product(effective_targets, effective_splits, effective_n_methods, effective_DR_methods, effective_variances)
     
+    # Filter combinations to exclude variance 95 with Isomap
+    filtered_combinations = [
+        combo for combo in all_combinations 
+        if not (combo[4] == Variance.V95 and combo[3] == DR_Method.Isomap)
+    ]
+
     # Return the filtered combinations
-    return list(all_combinations)
+    return list(filtered_combinations)
 
 
 def read_file(target, split, n_method, dr_method, variance):
@@ -128,13 +136,12 @@ def read_file(target, split, n_method, dr_method, variance):
     return X_train, y_train, X_test, y_test
 
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False):
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False):
     '''
     train_test_model
     Input:
         array of models
         array of model parameters
-        array of data combination wants to train, defualt two brain areas
 
     Output:
         result, write to csv.
@@ -170,13 +177,13 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
             smape = 100 * (2 * np.abs(y_test - y_pred) / (np.abs(y_test) + np.abs(y_pred))).mean()
             
             result = {
-                'target': target,
-                'split': split,
-                'n_method': n_method,
-                'dr_method': dr_method,
-                'variance': variance,
+                'target': target_map[target],
+                'split': split_map[split],
+                'n_method': n_method_map[n_method],
+                'dr_method': dr_method_map[dr_method],
+                'variance': variance_map[variance],
                 'model': model_name,
-                'parameter_search': list(param_grid.keys()),
+                'parameter_search': 'Random',
                 'best_params': randomized_search.best_params_,
                 'mse': mse,
                 'mae': mae,
@@ -189,70 +196,144 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
             if verbose:
                 print(f"Best parameters for {model_name}: {randomized_search.best_params_}")
                 print(f"Metrics - MSE: {mse}, MAE: {mae}, MAPE: {mape}, RMSE: {rmse}, SMAPE: {smape}")
+
+    if save_result:
+        results_df = pd.DataFrame(results)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = os.path.join(data_dir, '..', 'program_output')
+        output_dir = os.path.normpath(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
+        results_file = os.path.join(output_dir, f'model_results_{timestamp}.csv')
+        results_df.to_csv(results_file, index=False)
     
-    results_df = pd.DataFrame(results)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_file = os.path.join(data_dir, f'model_results_{timestamp}.csv')
-    results_df.to_csv(results_file, index=False)
-    
-    if verbose:
+    if verbose and save_result:
         print(f"Results saved to {results_file}")
 
     return results_df
 
-def write_results_to_excel(results, verbose=False):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_file = os.path.join(data_dir, f'model_results_{timestamp}.xlsx')
-    
-    # Initialize ExcelWriter
-    writer = pd.ExcelWriter(results_file, engine='xlsxwriter')
-    workbook = writer.book
-    
-    # Define headers for the results
-    headers = [
-        'Model Parameter (Grid/Random) Search Methods',
-        'Best Set of Parameters',
-        'Mean squared error',
-        'Mean absolute error',
-        'Mean absolute percentage error',
-        'Root mean squared error',
-        'Symmetric mean absolute percentage error'
-    ]
-    
-    # Group results by sheet name
-    grouped_results = {}
-    for result in results:
-        sheet_name = f"{result['Target'].name}_{result['Split'].name}_{result['Normalize_Method'].name}_{result['DR_Method'].name}_{result['Variance'].name}"
-        if sheet_name not in grouped_results:
-            grouped_results[sheet_name] = []
-        grouped_results[sheet_name].append(result)
-    
-    for sheet_name, sheet_results in grouped_results.items():
-        results_df = pd.DataFrame(sheet_results)
-        results_df.drop(columns=['Target', 'Split', 'Normalize_Method', 'DR_Method', 'Variance'], inplace=True)
-        results_df.rename(columns={
-            'Model': 'Model Parameter (Grid/Random) Search Methods',
-            'Param_Names': 'Model Parameter (Grid/Random) Search Methods',
-            'Best_Params': 'Best Set of Parameters',
-            'MSE': 'Mean squared error',
-            'MAE': 'Mean absolute error',
-            'MAPE': 'Mean absolute percentage error',
-            'RMSE': 'Root mean squared error',
-            'SMAPE': 'Symmetric mean absolute percentage error'
-        }, inplace=True)
-        results_df.to_excel(writer, index=False, sheet_name=sheet_name)
-        
-        # Apply formatting (optional)
-        worksheet = writer.sheets[sheet_name]
-        for i, header in enumerate(headers, 1):
-            worksheet.write(0, i, header)
-    
-    # Save and close the ExcelWriter
-    writer.save()
-    
-    if verbose:
-        print(f"Results saved to {results_file}")
 
+def read_setup_info(sheet):
+    '''
+    Read info of this sheet
+    '''
+    setup_info = {
+        "Train:Test Ratio": None,
+        "Dimension Reduction Techniques": None,
+        "Data Normalization Method": None,
+        "Variance1": None,
+        "Variance2": None
+    }
+    for row in sheet.iter_rows(min_row=1, max_row=3, min_col=1, max_col=2):
+        key = row[0].value
+        value = row[1].value
+        if key in setup_info:
+            if key == "Train:Test Ratio" and value:
+                setup_info[key] = value.split(':')[0].strip()  # Extract the first number
+            else:
+                setup_info[key] = value
+    # Read variance numbers from A5 and I5
+    setup_info["Variance1"] = '90'
+    setup_info["Variance2"] = '95'
+    return setup_info
+
+def get_model_row_mapping(sheet, start_col, verbose = False):
+    model_row_mapping = {}
+    for row in sheet.iter_rows(min_row=6, max_row=sheet.max_row, min_col=start_col, max_col=start_col):
+        model_name = row[0].value
+        if isinstance(model_name, str):
+            standardized_model_name = model_name.strip().lower()
+            if standardized_model_name not in model_row_mapping:
+                model_row_mapping[standardized_model_name] = row[0].row
+                if verbose:
+                        print(f"Mapping model '{model_name}' to row {row[0].row}")
+                elif verbose:
+                    print(f"Model '{model_name}' already mapped to row {model_row_mapping[standardized_model_name]}")
+    return model_row_mapping
+
+def write_results_to_excel(results_df, verbose=False):
+    results_df['split'] = results_df['split'].astype(str)
+    results_df['variance'] = results_df['variance'].astype(str)
+    # Group results by target
+    grouped_results = results_df.groupby('target')
+
+    changes_made = False  # Flag to track if any changes are made
+
+    for target_name, target_results in grouped_results:
+        path = os.path.join(data_dir, '..', 'performance_sheets', f'{target_name} Overall Model Peformance Results.xlsx')
+        # Load the existing Excel
+        workbook = openpyxl.load_workbook(path)
+        
+        for sheet_name in workbook.sheetnames:
+            sheet = workbook[sheet_name]
+            
+            # Read setup information from the sheet
+            setup_info = read_setup_info(sheet)
+            train_test_ratio = setup_info["Train:Test Ratio"]
+            dr_technique = setup_info["Dimension Reduction Techniques"]
+            normalization_method = setup_info["Data Normalization Method"]
+            variance1 = setup_info["Variance1"]
+            variance2 = setup_info["Variance2"]
+
+            # Get model row mapping for each section
+            model_row_mapping = get_model_row_mapping(sheet, start_col=1, verbose=True)
+            
+            # Determine matching results for variance1
+            matching_results_var1 = target_results[
+                (target_results['split'] == train_test_ratio) &
+                (target_results['dr_method'] == dr_technique) &
+                (target_results['n_method'] == excel_method_to_file[normalization_method]) &
+                (target_results['variance'] == variance1)
+            ]
+            
+            # Determine matching results for variance2
+            matching_results_var2 = target_results[
+                (target_results['split'] == train_test_ratio) &
+                (target_results['dr_method'] == dr_technique) &
+                (target_results['n_method'] == excel_method_to_file[normalization_method]) &
+                (target_results['variance'] == variance2)
+            ]
+            
+            if matching_results_var1.empty and matching_results_var2.empty:
+                continue
+            # Base column numbers for variance sections
+            base_col_var1 = 2
+            base_col_var2 = 10
+
+            # Write results for variance1
+            for _, result in matching_results_var1.iterrows():
+                model_name = result['model'].strip().lower()
+                if model_name in model_row_mapping:
+                    row_num = model_row_mapping[model_name]
+                    sheet.cell(row=row_num, column=base_col_var1, value=result['parameter_search'])
+                    sheet.cell(row=row_num, column=base_col_var1 + 1, value=str(result['best_params']))
+                    sheet.cell(row=row_num, column=base_col_var1 + 2, value=result['mse'])
+                    sheet.cell(row=row_num, column=base_col_var1 + 3, value=result['mae'])
+                    sheet.cell(row=row_num, column=base_col_var1 + 4, value=result['mape'])
+                    sheet.cell(row=row_num, column=base_col_var1 + 5, value=result['rmse'])
+                    sheet.cell(row=row_num, column=base_col_var1 + 6, value=result['smape'])
+                    changes_made = True
+            
+            # Write results for variance2
+            for _, result in matching_results_var2.iterrows():
+                model_name = result['model'].strip().lower()
+                if model_name in model_row_mapping:
+                    row_num = model_row_mapping[model_name]
+                    sheet.cell(row=row_num, column=base_col_var2, value=result['parameter_search'])
+                    sheet.cell(row=row_num, column=base_col_var2 + 1, value=str(result['best_params']))
+                    sheet.cell(row=row_num, column=base_col_var2 + 2, value=result['mse'])
+                    sheet.cell(row=row_num, column=base_col_var2 + 3, value=result['mae'])
+                    sheet.cell(row=row_num, column=base_col_var2 + 4, value=result['mape'])
+                    sheet.cell(row=row_num, column=base_col_var2 + 5, value=result['rmse'])
+                    sheet.cell(row=row_num, column=base_col_var2 + 6, value=result['smape'])
+                    changes_made = True
+        
+        # Save the workbook to the specified output path
+        if changes_made:
+            workbook.save(path)
+            if verbose:
+                print(f"Results saved to {path}")
+        
+        
 
 
 if __name__ == "__main__":
@@ -260,19 +341,23 @@ if __name__ == "__main__":
 
     # Define models
     models = {
-        'RandomForest': RandomForestRegressor(random_state=42),
-        'ExtraTrees': ExtraTreesRegressor(random_state=42)
+        '''
+        'Linear Regressor':
+        'Decision Tree Regressor':
+        '''
+        'Random Forest Regressor': RandomForestRegressor(random_state=42),
+        'ExtraTreesRegressor': ExtraTreesRegressor(random_state=42)
     }
 
     # Define parameter grids for RandomizedSearchCV
     param_grids = {
-        'RandomForest': {
+        'Random Forest Regressor': {
             'n_estimators': [10, 50, 100, 200],
             'max_depth': [None, 10, 20, 30],
             'min_samples_split': [2, 5, 10],
             'min_samples_leaf': [1, 2, 4]
         },
-        'ExtraTrees': {
+        'ExtraTreesRegressor': {
             'n_estimators': [10, 50, 100, 200],
             'max_depth': [None, 10, 20, 30],
             'min_samples_split': [2, 5, 10],
@@ -280,7 +365,7 @@ if __name__ == "__main__":
         }
     }
 
-    # Specify multiple values for each parameter
+    # Specify which datasets to use
     combinations = filter_combinations(
         targets=[Target.BA11],
         splits=[Split.S60],
@@ -289,5 +374,9 @@ if __name__ == "__main__":
         variances=[Variance.V90]
     )
     
-    results_df = train_test_model(models, param_grids, combinations, verbose=True)
+    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True)
+    # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
     print(results_df)
+    # Convert DataFrame to list of dictionaries
+    # results_list = results_df.to_dict(orient='records')
+    write_results_to_excel(results_df, verbose=True)

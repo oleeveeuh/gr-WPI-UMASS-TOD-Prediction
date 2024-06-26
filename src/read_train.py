@@ -4,7 +4,6 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolu
 from sklearn.model_selection import RandomizedSearchCV, TimeSeriesSplit
 from sklearn.ensemble import RandomForestRegressor, ExtraTreesRegressor
 import openpyxl
-from openpyxl.utils.dataframe import dataframe_to_rows
 from datetime import datetime
 import pandas as pd
 import numpy as np
@@ -274,7 +273,7 @@ def write_results_to_excel(results_df, verbose=False):
             normalization_method = setup_info["Data Normalization Method"]
             variance1 = setup_info["Variance1"]
             variance2 = setup_info["Variance2"]
-            
+
             # Get model row mapping for each section
             model_row_mapping = get_model_row_mapping(sheet, start_col=1, verbose=True)
             
@@ -342,6 +341,10 @@ if __name__ == "__main__":
 
     # Define models
     models = {
+        '''
+        'Linear Regressor':
+        'Decision Tree Regressor':
+        '''
         'Random Forest Regressor': RandomForestRegressor(random_state=42),
         'ExtraTreesRegressor': ExtraTreesRegressor(random_state=42)
     }
@@ -371,8 +374,8 @@ if __name__ == "__main__":
         variances=[Variance.V90]
     )
     
-    # results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True)
-    results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
+    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True)
+    # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
     print(results_df)
     # Convert DataFrame to list of dictionaries
     # results_list = results_df.to_dict(orient='records')

@@ -14,8 +14,8 @@ if __name__ == "__main__":
     # Define models
     models = {
         'Support Vector Regressor': SVR(max_iter=1000),
-        'Random Forest Regressor': RandomForestRegressor(random_state=42),
-        'ExtraTreesRegressor': ExtraTreesRegressor(random_state=42)
+        'Random Forest Regressor': RandomForestRegressor(random_state=RANDOM_STATE),
+        'ExtraTreesRegressor': ExtraTreesRegressor(random_state=RANDOM_STATE)
     }
 
     # Define parameter grids for RandomizedSearchCV

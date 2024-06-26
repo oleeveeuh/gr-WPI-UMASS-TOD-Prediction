@@ -42,6 +42,7 @@ n_method_map = {Normalize_Method.Log: 'log', Normalize_Method.MM: 'MM', Normaliz
 dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KPCA', DR_Method.Isomap: 'Isomap'}
 variance_map = {Variance.V90: '90', Variance.V95: '95'}
 excel_method_to_file = {'Log':'log', 'MinMax':'MM'}
+RANDOM_STATE = 42
 # get the path to data
 script_dir = os.path.dirname(__file__)
 data_dir = os.path.join(script_dir, '..', 'data', 'reduced_data')
@@ -141,7 +142,6 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
     Input:
         array of models
         array of model parameters
-        array of data combination wants to train, defualt two brain areas
 
     Output:
         result, write to csv.

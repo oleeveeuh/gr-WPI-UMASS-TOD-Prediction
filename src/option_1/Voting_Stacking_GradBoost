@@ -23,8 +23,7 @@ if __name__ == "__main__":
         'Stacking Regressor': StackingRegressor(estimators = [('lr', LinearRegression()),
                                                               ('svr', LinearSVR(random_state=42)),
                                                               ('rf', RandomForestRegressor(random_state=42)),
-                                                              ('gb', GradientBoostingRegressor(random_state=42))],
-                                                              random_state=42),
+                                                              ('gb', GradientBoostingRegressor(random_state=42))]),
         'Voting Regressor': VotingRegressor([
             ('rf', RandomForestRegressor(random_state=42)),
             ('gb', GradientBoostingRegressor(random_state=42)),

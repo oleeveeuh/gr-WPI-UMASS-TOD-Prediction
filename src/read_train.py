@@ -136,7 +136,14 @@ def read_file(target, split, n_method, dr_method, variance):
     return X_train, y_train, X_test, y_test
 
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False):
+def reshape_data(X, seq_length, num_features):
+    num_samples = X.shape[0] - seq_length + 1
+    reshaped_X = np.zeros((num_samples, seq_length, num_features))
+    for i in range(num_samples):
+        reshaped_X[i] = X[i:i + seq_length]
+    return reshaped_X
+
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False):
     '''
     train_test_model
     Input:
@@ -154,7 +161,26 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
             print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         
         X_train, y_train, X_test, y_test = read_file(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
+        if use_numpy:
+            # Convert DataFrames to NumPy arrays
+            X_train = X_train.to_numpy(dtype=np.float64)
+            y_train = y_train.to_numpy(dtype=np.float64).ravel()
+            X_test = X_test.to_numpy(dtype=np.float64)
+            y_test = y_test.to_numpy(dtype=np.float64).ravel()
+
+            
+            
+            if len(X_train.shape) == 2:  # If shape is (num_samples, num_features)
+                sequence_length = 1
+                num_features = X_train.shape[1]
+                X_train = reshape_data(X_train, sequence_length, num_features)
+                X_test = reshape_data(X_test, sequence_length, num_features)
         
+            print(X_train.shape)  # Should be (num_samples, sequence_length, num_features)
+            print(y_train.shape)  # Should be (num_samples,)
+            print(X_test.shape)   # Should be (num_samples, sequence_length, num_features)
+            print(y_test.shape)   # Should be (num_samples,)
+
         for model_name, model in models.items():
             param_grid = param_grids[model_name]
             

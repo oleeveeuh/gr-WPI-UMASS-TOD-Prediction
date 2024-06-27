@@ -38,16 +38,16 @@ class Variance(Enum):
 target_map = {Target.BA11: 'BA11', Target.BA47: 'BA47', Target.full: 'full'}
 split_map = {Split.S60: '60', Split.S70: '70', Split.S80: '80'}
 n_method_map = {Normalize_Method.Log: 'log', Normalize_Method.MM: 'MM', Normalize_Method.NN: 'nonnormalized'}
-dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KPCA', DR_Method.Isomap: 'Isomap'}
+#dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KPCA', DR_Method.Isomap: 'Isomap'}
 variance_map = {Variance.V90: '90', Variance.V95: '95'}
 
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', 'data', 'reduced_data')
+data_dir = os.path.join(script_dir, '..', '..', 'data', 'train_test_split_data')
 data_dir = os.path.normpath(data_dir)
 
 
-def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=None, variances=None):
+def filter_combinations(targets=None, splits=None, n_methods=None, variances=None):
     """
     Generate combinations of parameters for filtering datasets.
 
@@ -57,22 +57,19 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     splits (list of Split, optional): List of Split enums to include in the combinations.
                                       Defaults to including all splits.
     n_methods (list of Normalize_Method, optional): List of Normalize_Method enums to include in the combinations.
-                                                    Defaults to excluding 'nonnormalized'.
-    DR_methods (list of DR_Method, optional): List of DR_Method enums to include in the combinations.
-                                              Defaults to including all DR methods.
+                                                    Defaults to excluding 'nonnormalized'
     variances (list of Variance, optional): List of Variance enums to include in the combinations.
                                             Defaults to including all variances.
 
     Returns:
     list of tuples: A list of tuples, each containing a unique combination of the specified parameters.
-                    Each tuple contains (target, split, n_method, DR_method, variance).
+                    Each tuple contains (target, split, n_method, variance).
 
     Example:
     combinations = filter_combinations(
         targets=[Target.BA11, Target.BA47],
         splits=[Split.S60, Split.S70],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
-        DR_methods=[DR_Method.PCA],
         variances=[Variance.V90]
     )
     """
@@ -84,35 +81,34 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     effective_targets = targets if targets else default_targets
     effective_splits = splits if splits else list(Split)
     effective_n_methods = n_methods if n_methods else default_n_methods
-    effective_DR_methods = DR_methods if DR_methods else list(DR_Method)
-    effective_variances = variances if variances else list(Variance)
+    #effective_DR_methods = DR_methods if DR_methods else list(DR_Method)
+    #effective_variances = variances if variances else list(Variance)
 
     # Generate all combinations
-    all_combinations = product(effective_targets, effective_splits, effective_n_methods, effective_DR_methods,
-                               effective_variances)
+    all_combinations = product(effective_targets, effective_splits, effective_n_methods)
 
     # Return the filtered combinations
     return list(all_combinations)
 
 
-def read_files(target, split, n_method, dr_method, variance):
+def read_files(target, split, n_method):
     '''
     Input:
         target_data(BA11, BA47, Combine)
         normalize_method(log, MM, NN)
         split(60, 70, 80)
-        DR_method(ICA, KPCA, PCA, Isomap)
-        variance(90, 95)
 
     Output:
         X_train, y_train, X_test, y_test
     '''
+    # Get sub-file in /data/ for adding to file path:
+    sub_file = target_map[target] if (target_map[target] != "full") else "full_data"
     # Construct the file paths for train
-    train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
+    train_name = f"{sub_file}/{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_train.csv"
     train_file = os.path.join(data_dir, train_name)
 
     # file path for test
-    test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
+    test_name = f"{sub_file}/{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_test.csv"
     test_file = os.path.join(data_dir, test_name)
 
     # Load data
@@ -121,22 +117,59 @@ def read_files(target, split, n_method, dr_method, variance):
 
     return train_data, test_data
 
+def create_windows(combination, w_size = 3, verbose = False):
+    # read in the relevant data
+    target, split, n_method = combination
+    train_data, test_data = read_files(target=target, n_method=n_method, split=split)
+    if verbose:
+        print(
+            f"Creating Windows for: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}")
+
+    results = {}
+    i = 1
+    for df in [train_data, test_data]:
+        df_name = "train" if (i == 1) else "test"
+        df = df.sort_values(by='TOD').reset_index(drop=True)
+
+        # Create the new DataFrame
+        new_data = {col: [] for col in df.columns}
+
+        # Iterate through the DataFrame and replace values
+        for i in range(w_size+1, len(df) - w_size+1):
+            for col in df.columns[:4]:
+                if col in ['Age', 'TOD', 'Sex']:
+                    new_data[col].append(df.loc[i, col])
+                else:
+                    col_index = df.columns.get_loc(col)
+                    # Collect values from the preceding and following W rows
+                    surrounding_values = df.iloc[i - w_size:i + w_size+1, col_index].tolist()
+                    print("Working on Row: ", i)
+                    print("Extracting values from rows:", i - w_size, " through ", i + w_size+1)
+                    print("Corresponding to Values: ", surrounding_values)
+                    new_data[col].append(surrounding_values)
+        # Convert new_data back to a DataFrame
+        #new_df = pd.DataFrame(new_data)
+        #results[df_name] = new_df
+        #i += 1
+    #return results
+
+
 
 def apply_autoencoder(combinations, verbose=False):
 
     results = []
 
     for combination in combinations:
-        target, split, n_method, dr_method, variance = combination
+        target, split, n_method = combination
         if verbose:
             print(
-                f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
+                f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}")
 
-        train_data, test_data = read_files(target=target, n_method=n_method, split=split, dr_method=dr_method,
-                                                     variance=variance)
-        for df in [train_data, test_data]:
-            for row_num in range(1, len(df.shape[0])):
-                to_encode = df.iloc[(row_num-1):(row_num+1), ]
+        #train_data, test_data = read_files(target=target, n_method=n_method, split=split, dr_method=dr_method,
+        #                                             variance=variance)
+        #for df in [train_data, test_data]:
+            #for row_num in range(1, len(df.shape[0])):
+                #to_encode = df.iloc[(row_num-1):(row_num+1), ]
 
 
 
@@ -152,8 +185,23 @@ def apply_autoencoder(combinations, verbose=False):
 
 
 if __name__ == "__main__":
+
+    for i in range(1, 3):
+        print(i)
+
     # Get all the possible method combinations
-    combinations = filter_combinations(targets=target_map, splits=split_map, n_methods=n_method_map, DR_methods=dr_method_map, variances=variance_map)
+    combinations = filter_combinations(
+        targets=[Target.BA11],
+        splits=[Split.S60],
+        n_methods=[Normalize_Method.Log]
+    )
+    for combo in combinations:
+        windows = create_windows(combo, w_size=3, verbose = True)
+        for window in windows:
+            print(window, ":")
+            print(pd.DataFrame(windows[window].iloc[0:10, 2]))
+            for list in pd.DataFrame(windows[window].iloc[0:10, 3]).values:
+                print(list)
 
     #Initialize a receptacle dictionary (DICT1)
     # For each combination:

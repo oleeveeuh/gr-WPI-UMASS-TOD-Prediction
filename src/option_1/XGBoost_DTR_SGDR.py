@@ -60,8 +60,8 @@ if __name__ == "__main__":
 
     # Specify which datasets to use
     combinations = filter_combinations(
-        targets=[Target.BA11, Target.BA47],
-        splits=[Split.S60, Split.S70, Split.S80],
+        targets=[Target.full,],
+        splits=[Split.S70],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
         DR_methods=[DR_Method.ICA, DR_Method.KPCA, DR_Method.PCA, DR_Method.Isomap],
         variances=[Variance.V90, Variance.V95]

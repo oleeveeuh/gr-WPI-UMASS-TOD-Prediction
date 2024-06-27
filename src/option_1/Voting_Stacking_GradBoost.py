@@ -15,10 +15,6 @@ if __name__ == "__main__":
 
     # Define models
     models = {
-        # 'Support Vector Regressor': SVR(max_iter=1000),
-        # 'Random Forest Regressor': RandomForestRegressor(random_state=42),
-        # 'ExtraTreesRegressor': ExtraTreesRegressor(random_state=42),
-        # 'Decision Tree Regressor': DecisionTreeRegressor(random_state = 42),
         'Gradient Boosting Regressor': GradientBoostingRegressor(random_state=42),
         'Stacking Regressor': StackingRegressor(estimators = [('lr', LinearRegression()),
                                                               ('svr', LinearSVR(random_state=42)),
@@ -33,31 +29,7 @@ if __name__ == "__main__":
 
     # Define parameter grids for RandomizedSearchCV
     param_grids = {
-        # 'Support Vector Regressor': {
-        #     'C': [0.1, 1, 10, 100, 1000],
-        #     'gamma': [1, 0.1, 0.01, 0.001, 0.0001],
-        #     'kernel': ['linear', 'rbf']
-        # },
-        # 'Random Forest Regressor': {
-        #     'n_estimators': [10, 50, 100, 200],
-        #     'max_depth': [None, 10, 20, 30],
-        #     'min_samples_split': [2, 5, 10],
-        #     'min_samples_leaf': [1, 2, 4]
-        # },
-        # 'ExtraTreesRegressor': {
-        #     'n_estimators': [10, 50, 100, 200],
-        #     'max_depth': [None, 10, 20, 30],
-        #     'min_samples_split': [2, 5, 10],
-        #     'min_samples_leaf': [1, 2, 4]
-        # },
-        # 'Decision Tree Regressor': {
-        #     'max_depth': [None, 10, 15, 20, 30], 
-        #     'min_samples_split':[2, 5, 10], 
-        #     'min_samples_leaf': [2, 5, 10],
-        #     'max_features': [None, 'sqrt', 'log2'],
-        #     'min_impurity_decrease': [0, 1, 2],
-        #     'max_leaf_nodes': [None, 5, 10, 15, 20]
-        # },
+
         'Gradient Boosting Regressor': {
             'n_estimators': [10, 50, 100, 200],
             'learning_rate': [.05, .1, .5, 1],
@@ -83,8 +55,8 @@ if __name__ == "__main__":
 
     # Specify which datasets to use
     combinations = filter_combinations(
-        targets=[Target.BA11, Target.BA47],
-        splits=[Split.S60, Split.S70, Split.S80],
+        targets=[Target.full],
+        splits=[Split.S70],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
         DR_methods=[DR_Method.ICA, DR_Method.KPCA, DR_Method.PCA, DR_Method.Isomap],
         variances=[Variance.V90, Variance.V95]

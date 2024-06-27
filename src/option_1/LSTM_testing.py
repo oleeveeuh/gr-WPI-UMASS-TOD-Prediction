@@ -12,27 +12,24 @@ import torch.optim as optim
 from skorch import NeuralNetRegressor
 from sklearn.ensemble import AdaBoostRegressor
 # Define the LSTM model
-class LSTMModel(nn.Module):
-    def __init__(self, lstm_units=100, dense_units=128, dropout_rate=0.5):
-        super(LSTMModel, self).__init__()
-        self.lstm_units = lstm_units
-        self.dense_units = dense_units
-        self.dropout_rate = dropout_rate
-        self.lstm = None
-        self.fc = None
-        self.output = nn.Linear(dense_units, 1)
-    
+class LSTMRegressor(nn.Module):
+    def __init__(self, hidden_size, num_layers, output_size):
+        super(LSTMRegressor, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.output_size = output_size
+        self.lstm = None  # Initialized later
+        self.fc = nn.Linear(hidden_size, output_size)
+
     def forward(self, x):
-        if self.lstm is None:
-            input_dim = x.shape[-1]
-            self.lstm = nn.LSTM(input_size=input_dim, hidden_size=self.lstm_units, batch_first=True)
-            self.dropout = nn.Dropout(self.dropout_rate)
-            self.fc = nn.Linear(self.lstm_units, self.dense_units)
-        x, _ = self.lstm(x)
-        x = self.dropout(x[:, -1, :])
-        x = torch.relu(self.fc(x))
-        x = self.output(x)
-        return x
+        if self.lstm is None or self.lstm.input_size != x.size(2):
+            # Dynamically create the LSTM based on the current input size
+            self.lstm = nn.LSTM(x.size(2), self.hidden_size, self.num_layers, batch_first=True).to(x.device)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        out, _ = self.lstm(x, (h0, c0))
+        out = self.fc(out[:, -1, :])
+        return out
 
 if __name__ == "__main__":
     # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
@@ -40,23 +37,27 @@ if __name__ == "__main__":
     # Define models
     models = {
         'Long Short-Term Memory Network': NeuralNetRegressor(
-            module=LSTMModel,
-            criterion=nn.MSELoss,
+            LSTMRegressor,
+            # module__input_size=input_size,
+            module__hidden_size=50,
+            module__num_layers=1,
+            module__output_size=1,
+            max_epochs=20,
+            lr=0.01,
+            iterator_train__shuffle=False,
             train_split=None,
-            verbose=0,
+            device='cuda'
             )
     }
 
     # Define parameter grids for RandomizedSearchCV
     param_grids = {
         'Long Short-Term Memory Network': {
-            'module__lstm_units': [50, 100, 150],
-            'module__dense_units': [64, 128, 256],
-            'module__dropout_rate': [0.3, 0.5, 0.7],
-            'batch_size': [32, 64, 128],
+            'lr': [0.001, 0.01, 0.1],
             'max_epochs': [10, 20, 30],
-            'optimizer': [optim.Adam, optim.SGD],
-            'lr': [0.001, 0.01, 0.1]
+            'module__hidden_size': [25, 75],
+            'module__num_layers': [1, 3],
+            'batch_size': [16, 32],
         },
     }
 
@@ -70,7 +71,7 @@ if __name__ == "__main__":
         variances=[Variance.V90, Variance.V95]
     )
     
-    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True)
+    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True, use_numpy= True)
     # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
     print(results_df)
     # Convert DataFrame to list of dictionaries

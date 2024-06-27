@@ -22,7 +22,7 @@ def create_sequences(X, y, seq_length):
         y_seq.append(y[i + seq_length].astype(np.float32))
     return np.array(X_seq), np.array(y_seq)
 
-X_train, y_train, X_test, y_test = read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
+X_train, y_train, X_test, y_test = read_file(Target.BA47, Split.S60, Normalize_Method.Log, DR_Method.PCA, Variance.V90)
 X_train = X_train.values
 X_test = X_test.values
 y_train = y_train.values
@@ -37,15 +37,20 @@ print(X_train.shape)
 print(y_train.shape)
 # Define the LSTM model
 class LSTMRegressor(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, output_size):
+    def __init__(self, hidden_size, num_layers, output_size):
         super(LSTMRegressor, self).__init__()
-        print(f"Initializing model with hidden_size={hidden_size}, num_layers={num_layers}")
-        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.output_size = output_size
+        self.lstm = None  # Initialized later
         self.fc = nn.Linear(hidden_size, output_size)
-        
+
     def forward(self, x):
-        h0 = torch.zeros(num_layers, x.size(0), hidden_size).to(x.device)
-        c0 = torch.zeros(num_layers, x.size(0), hidden_size).to(x.device)
+        if self.lstm is None or self.lstm.input_size != x.size(2):
+            # Dynamically create the LSTM based on the current input size
+            self.lstm = nn.LSTM(x.size(2), self.hidden_size, self.num_layers, batch_first=True).to(x.device)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
         out, _ = self.lstm(x, (h0, c0))
         out = self.fc(out[:, -1, :])
         return out
@@ -58,7 +63,7 @@ output_size = 1
 
 net = NeuralNetRegressor(
     LSTMRegressor,
-    module__input_size=input_size,
+    # module__input_size=input_size,
     module__hidden_size=hidden_size,
     module__num_layers=num_layers,
     module__output_size=output_size,

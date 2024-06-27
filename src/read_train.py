@@ -136,16 +136,8 @@ def read_file(target, split, n_method, dr_method, variance):
     return X_train, y_train, X_test, y_test
 
 
-# Create sequences for X and adjust y accordingly
-def create_sequences(X, y, seq_length):
-    X_seq = []
-    y_seq = []
-    for i in range(len(X) - seq_length):
-        X_seq.append(X[i:i + seq_length].astype(np.float32))
-        y_seq.append(y[i + seq_length].astype(np.float32))
-    return np.array(X_seq), np.array(y_seq)
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False):
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_process_function = None):
     '''
     train_test_model
     Input:
@@ -164,15 +156,16 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
         
         X_train, y_train, X_test, y_test = read_file(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
         if use_numpy:
-            X_train = X_train.values
-            X_test = X_test.values
-            y_train = y_train.values
-            y_test = y_test.values
+            X_train = X_train.values.astype(np.float32)
+            X_test = X_test.values.astype(np.float32)
+            y_train = y_train.values.astype(np.float32)
+            y_test = y_test.values.astype(np.float32)
 
-            sequence = 3
+            if data_process_function:
+                X_train, y_train = data_process_function(X_train, y_train)
+                X_test, y_test = data_process_function(X_test, y_test)
 
-            X_train, y_train = create_sequences(X_train, y_train, sequence)
-            X_test, y_test = create_sequences(X_test, y_test, sequence)
+            
 
         for model_name, model in models.items():
             param_grid = param_grids[model_name]

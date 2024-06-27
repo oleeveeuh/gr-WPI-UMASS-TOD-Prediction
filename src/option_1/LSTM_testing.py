@@ -12,6 +12,16 @@ import torch.optim as optim
 from skorch import NeuralNetRegressor
 from sklearn.ensemble import AdaBoostRegressor
 # Define the LSTM model
+seq_length = 3
+# Create sequences for X and adjust y accordingly
+def create_sequences(X, y):
+    X_seq = []
+    y_seq = []
+    for i in range(len(X) - seq_length):
+        X_seq.append(X[i:i + seq_length].astype(np.float32))
+        y_seq.append(y[i + seq_length].astype(np.float32))
+    return np.array(X_seq), np.array(y_seq)
+
 class LSTMRegressor(nn.Module):
     def __init__(self, hidden_size, num_layers, output_size):
         super(LSTMRegressor, self).__init__()
@@ -71,7 +81,7 @@ if __name__ == "__main__":
         variances=[Variance.V90, Variance.V95]
     )
     
-    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True, use_numpy= True)
+    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True, use_numpy = True, data_process_function=create_sequences)
     # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
     print(results_df)
     # Convert DataFrame to list of dictionaries

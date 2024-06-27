@@ -1,95 +1,89 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jun 13 13:27:57 2024
+import sys
+import os
+# Get the parent directory
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+# Add the parent directory to the sys.path
+sys.path.append(parent_dir)
+# Now you can import the module
+from read_train import *
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from skorch import NeuralNetRegressor
+from sklearn.ensemble import AdaBoostRegressor
+# Define the LSTM model
+seq_length = 3
+# Create sequences for X and adjust y accordingly
+def create_sequences(X, y):
+    X_seq = []
+    y_seq = []
+    for i in range(len(X) - seq_length):
+        X_seq.append(X[i:i + seq_length].astype(np.float32))
+        y_seq.append(y[i + seq_length].astype(np.float32))
+    return np.array(X_seq), np.array(y_seq)
 
-@author: tillieslosser
-"""
+class LSTMRegressor(nn.Module):
+    def __init__(self, hidden_size, num_layers, output_size):
+        super(LSTMRegressor, self).__init__()
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.output_size = output_size
+        self.lstm = None  # Initialized later
+        self.fc = nn.Linear(hidden_size, output_size)
 
-import numpy as np
-import matplotlib.pyplot as plt
-import pandas as pd
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import LSTM
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_squared_error
+    def forward(self, x):
+        if self.lstm is None or self.lstm.input_size != x.size(2):
+            # Dynamically create the LSTM based on the current input size
+            self.lstm = nn.LSTM(x.size(2), self.hidden_size, self.num_layers, batch_first=True).to(x.device)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
+        out, _ = self.lstm(x, (h0, c0))
+        out = self.fc(out[:, -1, :])
+        return out
 
-# load the dataset
-dataframe = pd.read_csv('/Users/tillieslosser/Downloads/Academic/Research/WPI/data/final_data.csv', index_col=0, engine='python')
-data = pd.concat([dataframe['TOD'], dataframe.loc[:, 'PER3':'SMARCA1']], axis = 1)
-"""
-dataset = data.values
-print(dataset)
+if __name__ == "__main__":
+    # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
 
-# normalize the dataset
-scaler = MinMaxScaler(feature_range=(0, 1))
-dataset[:, 1:] = scaler.fit_transform(dataset[:, 1:])
+    # Define models
+    models = {
+        'Long Short-Term Memory Network': NeuralNetRegressor(
+            LSTMRegressor,
+            # module__input_size=input_size,
+            module__hidden_size=50,
+            module__num_layers=1,
+            module__output_size=1,
+            max_epochs=20,
+            lr=0.01,
+            iterator_train__shuffle=False,
+            train_split=None,
+            device='cuda'
+            )
+    }
 
-# split into train and test sets
-train_size = int(len(dataset) * 0.67)
-test_size = len(dataset) - train_size
-train, test = dataset[0:train_size,:], dataset[train_size:len(dataset),:]
+    # Define parameter grids for RandomizedSearchCV
+    param_grids = {
+        'Long Short-Term Memory Network': {
+            'lr': [0.001, 0.01, 0.1],
+            'max_epochs': [10, 20, 30],
+            'module__hidden_size': [25, 75],
+            'module__num_layers': [1, 3],
+            'batch_size': [16, 32],
+        },
+    }
 
-"""
 
-#_____ start GPT
-
-scaler = MinMaxScaler()
-data.iloc[:, 1:] = scaler.fit_transform(data.iloc[:, 1:])
-
-
-def create_sequences(df, sequence_length):
-    X, y = [], []
-    feature_columns = df.columns[1:]  # All columns except the first one
-    target_column = df.columns[0]  # The first column is the target
-
-    for i in range(len(df) - sequence_length):
-        # Extract a sequence of features from index i to i + sequence_length
-        X.append(df[feature_columns].iloc[i:i + sequence_length].values)
-
-        # The target value is the time at the end of the sequence
-        y.append(df[target_column].iloc[i + sequence_length])
-
-    return np.array(X), np.array(y)
-
-sequence_length = 10  # Example sequence length
-X, y = create_sequences(data, sequence_length)
-
-# Split data into training and testing sets
-split = int(0.8 * len(X))
-X_train, X_test = X[:split], X[split:]
-print("\n\n\nX_TRAIN:\n", X_train)
-print("\n\n\nX_TEST:\n", X_test)
-y_train, y_test = y[:split], y[split:]
-print("\n\n\nY_TRAIN:\n", y_train)
-print("\n\n\nY_TEST:\n", y_test)
-
-# Build the LSTM model
-model = Sequential()
-model.add(LSTM(50, return_sequences=False, input_shape=(sequence_length, 235)))
-model.add(Dense(1))  # Output layer for predicting time
-
-model.compile(optimizer='adam', loss='mse')
-
-# Train the model
-model.fit(X_train, y_train, epochs=50, batch_size=32, validation_data=(X_test, y_test))
-
-# Predict
-y_pred = model.predict(X_test)
-
-plt.figure(figsize=(12, 6))
-plt.plot(y_test, label='Actual Time', color='blue')
-plt.plot(y_pred, label='Predicted Time', color='red', linestyle='--')
-plt.xlabel('Time Step')
-plt.ylabel('Time')
-plt.title('Actual vs Predicted Time')
-plt.legend()
-plt.show()
-
-# Evaluate
-mse = model.evaluate(X_test, y_test)
-print(f'Mean Squared Error: {mse}')
-
-print("done")
+    # Specify which datasets to use
+    combinations = filter_combinations(
+        targets=[Target.BA11,Target.BA47,],
+        splits=[Split.S60, Split.S70, Split.S80],
+        n_methods=[Normalize_Method.Log, Normalize_Method.MM],
+        DR_methods=[DR_Method.ICA, DR_Method.PCA, DR_Method.KPCA, DR_Method.Isomap],
+        variances=[Variance.V90, Variance.V95]
+    )
+    
+    results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True, use_numpy = True, data_process_function=create_sequences)
+    # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
+    print(results_df)
+    # Convert DataFrame to list of dictionaries
+    # results_list = results_df.to_dict(orient='records')
+    write_results_to_excel(results_df, verbose=True)

@@ -133,25 +133,24 @@ def create_windows(combination, w_size = 3, verbose = False):
 
         # Create the new DataFrame
         new_data = {col: [] for col in df.columns}
-
         # Iterate through the DataFrame and replace values
-        for i in range(w_size+1, len(df) - w_size+1):
-            for col in df.columns[:4]:
+        for i in range(w_size+1, len(df) - w_size+1): # For w=3, the range is row 4(inclusive) through the 3rd from end (exclusive)
+            for col in df.columns:
                 if col in ['Age', 'TOD', 'Sex']:
                     new_data[col].append(df.loc[i, col])
                 else:
                     col_index = df.columns.get_loc(col)
                     # Collect values from the preceding and following W rows
-                    surrounding_values = df.iloc[i - w_size:i + w_size+1, col_index].tolist()
-                    print("Working on Row: ", i)
-                    print("Extracting values from rows:", i - w_size, " through ", i + w_size+1)
-                    print("Corresponding to Values: ", surrounding_values)
+                    surrounding_values = df.iloc[i - w_size-1:i + w_size, col_index].tolist()
+                    #print("Working on Row: ", i, " of value ",  df.loc[i, col])
+                    #print("Extracting values from rows:", i - w_size, " through ", i + w_size)
+                    #print("Corresponding to Values: ", surrounding_values)
                     new_data[col].append(surrounding_values)
-        # Convert new_data back to a DataFrame
-        #new_df = pd.DataFrame(new_data)
-        #results[df_name] = new_df
-        #i += 1
-    #return results
+         #Convert new_data back to a DataFrame
+        new_df = pd.DataFrame(new_data)
+        results[df_name] = new_df
+        i += 1
+    return results
 
 
 
@@ -185,10 +184,6 @@ def apply_autoencoder(combinations, verbose=False):
 
 
 if __name__ == "__main__":
-
-    for i in range(1, 3):
-        print(i)
-
     # Get all the possible method combinations
     combinations = filter_combinations(
         targets=[Target.BA11],
@@ -198,10 +193,8 @@ if __name__ == "__main__":
     for combo in combinations:
         windows = create_windows(combo, w_size=3, verbose = True)
         for window in windows:
-            print(window, ":")
-            print(pd.DataFrame(windows[window].iloc[0:10, 2]))
-            for list in pd.DataFrame(windows[window].iloc[0:10, 3]).values:
-                print(list)
+            filename = "/Users/tillieslosser/Downloads/BA11_60_log_"+window+".csv"
+            windows[window].to_csv(filename)
 
     #Initialize a receptacle dictionary (DICT1)
     # For each combination:

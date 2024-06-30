@@ -287,7 +287,7 @@ def write_results_to_excel(results_df, verbose=False):
             variance2 = setup_info["Variance2"]
 
             # Get model row mapping for each section
-            model_row_mapping = get_model_row_mapping(sheet, start_col=1, verbose=True)
+            model_row_mapping = get_model_row_mapping(sheet, start_col=1, verbose=False)
             
             # Determine matching results for variance1
             matching_results_var1 = target_results[

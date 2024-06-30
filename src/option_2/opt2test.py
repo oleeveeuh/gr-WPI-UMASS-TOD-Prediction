@@ -5,20 +5,21 @@ from tensorflow.keras.layers import Input, Dense, Flatten, LSTM
 from tensorflow.keras.models import Model, Sequential
 
 train_path = (r"/Users/olivialiau/Documents/gr-WPI-UMASS-TOD-Project/data/train_test_split_data/full_data/full_60_log_test.csv")
-test_path = (r"/Users/olivialiau/Documents/gr-WPI-UMASS-TOD-Project/data/train_test_split_data/full_data/full_60_log_test.csv")
+# test_path = (r"/Users/olivialiau/Documents/gr-WPI-UMASS-TOD-Project/data/train_test_split_data/full_data/full_60_log_test.csv")
 columns_to_drop = ['TOD', 'Age', 'Sex']
 df = pd.read_csv(train_path)
-df2 = pd.read_csv(test_path)
+# df2 = pd.read_csv(test_path)
 
 x_train = df.drop(columns=columns_to_drop)
-y_train = df['TOD'].values
-x_test = df2.drop(columns=columns_to_drop)  
-y_test = df2['TOD']
+# y_train = df['TOD'].values
+# x_test = df2.drop(columns=columns_to_drop)  
+# y_test = df2['TOD']
 
 
 window_size = 3
 start_index = window_size
 end_index = len(df)- window_size
+
 def get_window(dataset, obs, gene):
     i = 0
 

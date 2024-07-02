@@ -36,6 +36,7 @@ class Variance(Enum):
     V95 = 1
 
 # Mapping from Enums to actual values
+folder_map = {Target.BA11: 'BA11', Target.BA47: 'BA47', Target.full: 'full_data'}
 target_map = {Target.BA11: 'BA11', Target.BA47: 'BA47', Target.full: 'full'}
 split_map = {Split.S60: '60', Split.S70: '70', Split.S80: '80'}
 n_method_map = {Normalize_Method.Log: 'log', Normalize_Method.MM: 'MM', Normalize_Method.NN: 'nonnormalized'}
@@ -86,23 +87,52 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     effective_targets = targets if targets else default_targets
     effective_splits = splits if splits else list(Split)
     effective_n_methods = n_methods if n_methods else default_n_methods
-    effective_DR_methods = DR_methods if DR_methods else list(DR_Method)
-    effective_variances = variances if variances else list(Variance)
+    effective_DR_methods = DR_methods if DR_methods else []
+    effective_variances = variances if variances else []
     
     # Generate all combinations
-    all_combinations = product(effective_targets, effective_splits, effective_n_methods, effective_DR_methods, effective_variances)
+    if DR_methods == None or variances == None:
+        all_combinations = product(effective_targets, effective_splits, effective_n_methods)
+        return list(all_combinations)
+    else:
+        all_combinations = product(effective_targets, effective_splits, effective_n_methods, effective_DR_methods, effective_variances)
+        # Filter combinations to exclude variance 95 with Isomap
+        filtered_combinations = [
+            combo for combo in all_combinations 
+            if not (combo[4] == Variance.V95 and combo[3] == DR_Method.Isomap)
+        ]
+        # Return the filtered combinations
+        return list(filtered_combinations)
+
+# read from train_test_split_data
+def read_data_file(target, split, n_method, split_xy = True):
+    data_dir = os.path.join(script_dir, '..', 'data', 'train_test_split_data')
+    data_dir = os.path.normpath(data_dir)
+
+    # Construct the file paths for train
+    train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_train.csv"
+    test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_test.csv"
+
+    train_file = os.path.join(data_dir, folder_map[target], train_name)
+    test_file = os.path.join(data_dir, folder_map[target], test_name)
     
-    # Filter combinations to exclude variance 95 with Isomap
-    filtered_combinations = [
-        combo for combo in all_combinations 
-        if not (combo[4] == Variance.V95 and combo[3] == DR_Method.Isomap)
-    ]
+    # Load data
+    train_data = pd.read_csv(train_file)
+    test_data = pd.read_csv(test_file)
 
-    # Return the filtered combinations
-    return list(filtered_combinations)
+    if not split_xy:
+        return train_data, test_data
+    
+    y_train = train_data.pop('TOD')
+    X_train = train_data
 
+    y_test = test_data.pop('TOD')
+    X_test = test_data
 
-def read_file(target, split, n_method, dr_method, variance):
+    return X_train, y_train, X_test, y_test
+    
+# read from reduced data folder
+def read_reduced_file(target, split, n_method, dr_method, variance):
     '''
     Input:
         target_data(BA11, BA47, Combine)
@@ -114,19 +144,18 @@ def read_file(target, split, n_method, dr_method, variance):
     Output:
         X_train, y_train, X_test, y_test
     '''
+
     # Construct the file paths for train
     train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
-    train_file = os.path.join(data_dir, train_name)
-    
-    # file path for test
     test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
+
+    train_file = os.path.join(data_dir, train_name)
     test_file = os.path.join(data_dir, test_name)
     
     # Load data
     train_data = pd.read_csv(train_file)
     test_data = pd.read_csv(test_file)
 
-    # Preprocess data
     y_train = train_data.pop('TOD')
     X_train = train_data
 
@@ -154,7 +183,7 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
         if verbose:
             print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         
-        X_train, y_train, X_test, y_test = read_file(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
+        X_train, y_train, X_test, y_test = read_reduced_file(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
         if use_numpy:
             X_train = X_train.values.astype(np.float32)
             X_test = X_test.values.astype(np.float32)

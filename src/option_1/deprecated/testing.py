@@ -22,7 +22,7 @@ def create_sequences(X, y, seq_length):
         y_seq.append(y[i + seq_length].astype(np.float32))
     return np.array(X_seq), np.array(y_seq)
 
-X_train, y_train, X_test, y_test = read_file(Target.BA47, Split.S60, Normalize_Method.Log, DR_Method.PCA, Variance.V90)
+X_train, y_train, X_test, y_test = read_reduced_file(Target.BA47, Split.S60, Normalize_Method.Log, DR_Method.PCA, Variance.V90)
 X_train = X_train.values
 X_test = X_test.values
 y_train = y_train.values

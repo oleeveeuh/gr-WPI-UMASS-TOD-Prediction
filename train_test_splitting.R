@@ -113,16 +113,6 @@ for (i in 1:3) {
 all_dfs <- unlist(unlist(output, recursive = FALSE), recursive = FALSE)
 
 for (df in names(all_dfs)) {
-  if (grepl("train", df)) {
-    for (col in colnames(all_dfs[[df]])) {
-      if (min(all_dfs[[df]][col]) < 0) {
-        cat("WARNING: ",df, col, " has a minimum value of ", min(all_dfs[[df]][col]), " not 0\n")
-      }
-    }
-  }
-}
-
-for (df in names(all_dfs)) {
   names(all_dfs[[df]])[names(all_dfs[[df]]) == 'TOD_pos'] <- 'TOD'
 }
 
@@ -139,3 +129,37 @@ for (name in names(all_dfs)) {
   write.csv(dataset, file = file_name, row.names = FALSE)
 }
 
+
+
+
+# code for examining data and stuff ____________________________________________________________
+for (df_name in names(all_dfs)) {
+  df <- all_dfs[[df_name]]
+  
+  # Get the subset of the dataframe from the 4th to the 238th column
+  subset_df <- df[, 4:238]
+  
+  # Find the minimum value and its column
+  min_val <- min(subset_df)
+  min_col <- which(subset_df == min_val, arr.ind = TRUE)[2]
+  
+  # Find the maximum value and its column
+  max_val <- max(subset_df)
+  max_col <- which(subset_df == max_val, arr.ind = TRUE)[2]
+  
+  # Print the information
+  cat("Dataframe Name:", df_name, "\n")
+  cat("Minimum Value:", min_val, "in Column:", min_col + 3, "\n") # +3 to adjust for original column index
+  cat("Maximum Value:", max_val, "in Column:", max_col + 3, "\n") # +3 to adjust for original column index
+  cat("\n")
+}
+
+for (df in names(all_dfs)) {
+  if (grepl("train", df)) {
+    for (col in colnames(all_dfs[[df]])) {
+      if (min(all_dfs[[df]][col]) < 0) {
+        cat("WARNING: ",df, col, " has a minimum value of ", min(all_dfs[[df]][col]), " not 0\n")
+      }
+    }
+  }
+}

@@ -84,13 +84,17 @@ write.csv(final_data_BA47, "data/wrangled data/BA47_data_6_17_2024.csv", row.nam
 # DATA VISUALIZATION
 
 tidy_full <- full_df |> 
-  pivot_longer(cols = -c(BA_ID:Manner), names_to = 'gene_name', values_to = 'expression_level')
+  pivot_longer(cols = -c(BA_ID:TOD_pos), names_to = 'gene_name', values_to = 'expression_level')
 
+tidy_small <- tidy_full |> 
+  filter(gene_name %in% c("PER3", "LYPLA2", "PNRC2", "FAM76A", 'STRADB', 'KIAA1107', 'RNF115', 'C1orf51', 'PTPRC', 'PPFIA4', 'TRAF5'))
 
 ## Just look as a few different genes
-ggplot(tidy_small[tidy_small$BA_ID == 11,], aes(x = TOD, y = expression_level)) +
-  geom_point(color = "#ab1a2d")+
+ggplot(tidy_small, aes(x = TOD_pos, y = expression_level, color = BA_ID)) +
+  geom_point()+
   facet_wrap(~ gene_name, scales = "free", dir = "v") +
   theme_light() +
-  labs(title = "Gene Rhythmicity, BA 11", subtitle = "Using data from Chen et al.")
+  labs(title = "Gene Rhythmicity in both BAs")
+
+
 

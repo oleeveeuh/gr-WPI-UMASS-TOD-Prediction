@@ -6,7 +6,6 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 # Now you can import the module
 from read_train import *
-from datetime import datetime
 import pandas as pd
 import numpy as np
 import os
@@ -25,6 +24,7 @@ window_data_path = os.path.normpath(window_data_path)
 
 # Setting up the device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 print(f"Using device: {device}")
 
 class Autoencoder(nn.Module):
@@ -119,18 +119,37 @@ def apply_autoencoder(combinations, verbose=False):
         train_df.drop(['Age', 'TOD', 'Sex'], axis=1, inplace=True)
         test_df.drop(['Age', 'TOD', 'Sex'], axis=1, inplace=True)
 
-        print(train_df.head(1))
-
+        # Convert string lists to actual lists
         for column in train_df.columns:
             train_df[column] = train_df[column].apply(ast.literal_eval)
-
-        for column in test_df.columns:
             test_df[column] = test_df[column].apply(ast.literal_eval)
 
-        # Prepare data for PyTorch - flattening each array of values into a single long vector
-        train_tensor = torch.tensor(train_df.applymap(np.array).values.tolist(), dtype=torch.float32).view(train_df.shape[0], -1)
-        test_tensor = torch.tensor(test_df.applymap(np.array).values.tolist(), dtype=torch.float32).view(test_df.shape[0], -1)
+        if verbose:
+            print(train_df.shape)
         
+        # Stack the DataFrame to collapse the columns into a single column of lists
+        stacked_train = train_df.stack()
+        stacked_test = test_df.stack()
+
+        # Apply pd.Series to expand each list into its own row
+        expanded_train = stacked_train.apply(pd.Series)
+        expanded_test = stacked_train.apply(pd.Series)
+
+        # Reset the index to flatten it, and optionally drop the old indices
+        reshaped_train_df = expanded_train.reset_index(drop=True)
+        reshaped_test_df = expanded_test.reset_index(drop=True)
+
+        if verbose:
+            # Now reshaped_df should be in the shape of (20445, 7)
+            print(reshaped_train_df.shape)
+
+        # Prepare data for PyTorch
+        train_tensor = torch.tensor(reshaped_train_df.values, dtype=torch.float32)
+        test_tensor = torch.tensor(reshaped_test_df.values, dtype=torch.float32)
+
+        if verbose:
+            print(train_tensor.shape)
+            
         num_features = train_tensor.shape[1]
 
         # Initialize Autoencoder and training essentials
@@ -141,7 +160,7 @@ def apply_autoencoder(combinations, verbose=False):
 
         # Train the Autoencoder with tqdm for progress tracking
         autoencoder.train()
-        epochs = 30  # Set the number of epochs
+        epochs = 10  # Set the number of epochs
         for epoch in range(epochs):
             with tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch") as tepoch:
                 for data, in tepoch:
@@ -197,10 +216,15 @@ def create_windowed_files(combinations):
             windows[window].to_csv(path, index=False)
 
 if __name__ == "__main__":
+    # combinations = filter_combinations(
+    #     targets=[Target.BA11, Target.BA47],
+    #     splits=[Split.S60, Split.S70, Split.S80],
+    #     n_methods=[Normalize_Method.Log, Normalize_Method.MM]
+    # )
     combinations = filter_combinations(
-        targets=[Target.BA11, Target.BA47],
-        splits=[Split.S60, Split.S70, Split.S80],
-        n_methods=[Normalize_Method.Log, Normalize_Method.MM]
+        targets=[Target.BA11],
+        splits=[Split.S60],
+        n_methods=[Normalize_Method.Log]
     )
     # create_windowed_files(combinations)
     apply_autoencoder(combinations, verbose=True)

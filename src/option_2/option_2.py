@@ -10,7 +10,55 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import os
+import torch
+from torch import nn, optim
+from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
+import ast
 
+WINDOW_SIZE = 3
+this_script = os.path.dirname(__file__)
+encoded_path = os.path.join(this_script, '..', '..', 'data', 'encoded')
+encoded_path = os.path.normpath(encoded_path)
+window_data_path = os.path.join(this_script, '..', '..', 'data', 'window')
+window_data_path = os.path.normpath(window_data_path)
+
+# Setting up the device
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
+class Autoencoder(nn.Module):
+    def __init__(self, original_dim, encoding_dim):
+        super(Autoencoder, self).__init__()
+        # Define the encoder
+        self.encoder = nn.Sequential(
+            nn.Flatten(),  # Flatten the input if it's not already 1D
+            nn.Linear(original_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, encoding_dim),
+            nn.Tanh(),  # Compresses into the specified encoding dimension
+        )
+        
+        # Define the decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(encoding_dim, 32),
+            nn.ReLU(),
+            nn.Linear(32, 64),
+            nn.ReLU(),
+            nn.Linear(64, 128),
+            nn.ReLU(),
+            nn.Linear(128, original_dim),
+            nn.Sigmoid()  # Assuming the input features were scaled between 0 and 1
+        )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded
 
 def create_windows(combination, w_size = 3, verbose = False):
     # read in the relevant data
@@ -47,49 +95,115 @@ def create_windows(combination, w_size = 3, verbose = False):
         i += 1
     return results
 
-
+encoding_dim = 1
 
 def apply_autoencoder(combinations, verbose=False):
-
+    os.makedirs(encoded_path, exist_ok=True)
     results = []
 
     for combination in combinations:
         target, split, n_method = combination
+        train_file = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{WINDOW_SIZE}_train.csv"
+        test_file = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{WINDOW_SIZE}_test.csv"
         if verbose:
-            print(
-                f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}")
+            print(f"Processing: {train_file}")
+        train_path = os.path.join(window_data_path, train_file)
+        test_path = os.path.join(window_data_path, test_file)
+        train_df = pd.read_csv(train_path)
+        test_df = pd.read_csv(test_path)
 
-        #train_data, test_data = read_files(target=target, n_method=n_method, split=split, dr_method=dr_method,
-        #                                             variance=variance)
-        #for df in [train_data, test_data]:
-            #for row_num in range(1, len(df.shape[0])):
-                #to_encode = df.iloc[(row_num-1):(row_num+1), ]
+        train_head_df = train_df[['Age', 'TOD', 'Sex']].copy()
+        test_head_df = test_df[['Age', 'TOD', 'Sex']].copy()
+
+        # Drop the columns before processing
+        train_df.drop(['Age', 'TOD', 'Sex'], axis=1, inplace=True)
+        test_df.drop(['Age', 'TOD', 'Sex'], axis=1, inplace=True)
+
+        print(train_df.head(1))
+
+        for column in train_df.columns:
+            train_df[column] = train_df[column].apply(ast.literal_eval)
+
+        for column in test_df.columns:
+            test_df[column] = test_df[column].apply(ast.literal_eval)
+
+        # Prepare data for PyTorch - flattening each array of values into a single long vector
+        train_tensor = torch.tensor(train_df.applymap(np.array).values.tolist(), dtype=torch.float32).view(train_df.shape[0], -1)
+        test_tensor = torch.tensor(test_df.applymap(np.array).values.tolist(), dtype=torch.float32).view(test_df.shape[0], -1)
+        
+        num_features = train_tensor.shape[1]
+
+        # Initialize Autoencoder and training essentials
+        autoencoder = Autoencoder(num_features, encoding_dim).to(device)
+        criterion = nn.MSELoss()
+        optimizer = optim.Adam(autoencoder.parameters(), lr=0.001)
+        train_loader = DataLoader(TensorDataset(train_tensor), batch_size=32, shuffle=True)
+
+        # Train the Autoencoder with tqdm for progress tracking
+        autoencoder.train()
+        epochs = 30  # Set the number of epochs
+        for epoch in range(epochs):
+            with tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch") as tepoch:
+                for data, in tepoch:
+                    data = data.to(device)
+                    optimizer.zero_grad()
+                    outputs = autoencoder(data)
+                    loss = criterion(outputs, data)
+                    loss.backward()
+                    optimizer.step()
+
+                    # Update tqdm bar showing current batch loss
+                    tepoch.set_postfix(loss=loss.item())
+
+        # Encode the train and test data
+        autoencoder.eval()
+        with torch.no_grad():
+            # Ensure train_tensor and test_tensor are on the GPU
+            train_tensor = train_tensor.to(device)
+            test_tensor = test_tensor.to(device)
+
+            # Generate encoded outputs
+            encoded_train = autoencoder.encoder(train_tensor)
+            encoded_test = autoencoder.encoder(test_tensor)
+
+            # Move encoded outputs back to CPU and then convert to numpy arrays
+            encoded_train = encoded_train.to('cpu').numpy()
+            encoded_test = encoded_test.to('cpu').numpy()
+
+        # Combine the encoded data with the kept columns
+        encoded_train_df = pd.DataFrame(encoded_train, columns=[f'encoded_feature_{i}' for i in range(encoding_dim)])
+        encoded_test_df = pd.DataFrame(encoded_test, columns=[f'encoded_feature_{i}' for i in range(encoding_dim)])
+        final_train_df = pd.concat([train_head_df.reset_index(drop=True), encoded_train_df], axis=1)
+        final_test_df = pd.concat([test_head_df.reset_index(drop=True), encoded_test_df], axis=1)
+
+        # Save encoded outputs
+        final_train_df.to_csv(os.path.join(encoded_path, train_file), index=False)
+        final_test_df.to_csv(os.path.join(encoded_path, test_file), index=False)
+
+        if verbose:
+            print(f"Encoded data saved for {train_file} and {test_file}")
 
 
-
-    results_df = pd.DataFrame(results)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_file = os.path.join(data_dir, f'model_results_{timestamp}.csv')
-    results_df.to_csv(results_file, index=False)
-
-    if verbose:
-        print(f"Results saved to {results_file}")
-
-    return results_df
-
+def create_windowed_files(combinations):
+    os.makedirs(window_data_path, exist_ok=True)
+# Get all the possible method combinations
+    
+    for combo in combinations:
+        windows = create_windows(combo, w_size=WINDOW_SIZE, verbose = True)
+        target, split, n_method = combo
+        for window in windows:
+            filename = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{WINDOW_SIZE}_{window}.csv"
+            path = os.path.join(window_data_path, filename)
+            windows[window].to_csv(path, index=False)
 
 if __name__ == "__main__":
-    # Get all the possible method combinations
     combinations = filter_combinations(
-        targets=[Target.BA11],
-        splits=[Split.S60],
-        n_methods=[Normalize_Method.Log]
+        targets=[Target.BA11, Target.BA47],
+        splits=[Split.S60, Split.S70, Split.S80],
+        n_methods=[Normalize_Method.Log, Normalize_Method.MM]
     )
-    for combo in combinations:
-        windows = create_windows(combo, w_size=3, verbose = True)
-        for window in windows:
-            filename = "/Users/tillieslosser/Downloads/BA11_60_log_"+window+".csv"
-            windows[window].to_csv(filename)
+    # create_windowed_files(combinations)
+    apply_autoencoder(combinations, verbose=True)
 
     #Initialize a receptacle dictionary (DICT1)
     # For each combination:

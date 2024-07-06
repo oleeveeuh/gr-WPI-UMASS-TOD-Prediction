@@ -35,6 +35,10 @@ class Variance(Enum):
     V90 = 0
     V95 = 1
 
+class WindowSize(Enum):
+    W1 = 0
+    W3 = 1
+
 # Mapping from Enums to actual values
 folder_map = {Target.BA11: 'BA11', Target.BA47: 'BA47', Target.full: 'full_data'}
 target_map = {Target.BA11: 'BA11', Target.BA47: 'BA47', Target.full: 'full'}
@@ -43,6 +47,7 @@ n_method_map = {Normalize_Method.Log: 'log', Normalize_Method.MM: 'MM', Normaliz
 dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KPCA', DR_Method.Isomap: 'Isomap'}
 variance_map = {Variance.V90: '90', Variance.V95: '95'}
 excel_method_to_file = {'Log':'log', 'MinMax':'MM'}
+window_size = { WindowSize.W1 : '1', WindowSize.W3 : '3' }
 RANDOM_STATE = 42
 # get the path to data
 script_dir = os.path.dirname(__file__)

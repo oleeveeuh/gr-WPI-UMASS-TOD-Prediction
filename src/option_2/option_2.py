@@ -113,7 +113,7 @@ def reshape_and_save(encoded_output, original_meta_df, num_samples, num_genes, e
 
 encoding_dim = 1
 
-def apply_autoencoder(combinations, verbose=False):
+def apply_autoencoder(combinations, epochs = 10,verbose=False):
     os.makedirs(encoded_path, exist_ok=True)
     results = []
 
@@ -180,7 +180,6 @@ def apply_autoencoder(combinations, verbose=False):
 
         # Train the Autoencoder with tqdm for progress tracking
         autoencoder.train()
-        epochs = 10  # Set the number of epochs
         for epoch in range(epochs):
             with tqdm(train_loader, desc=f"Epoch {epoch + 1}/{epochs}", unit="batch") as tepoch:
                 for data, in tepoch:
@@ -238,8 +237,8 @@ if __name__ == "__main__":
         splits=[Split.S60],
         n_methods=[Normalize_Method.Log]
     )
-    # create_windowed_files(combinations)
-    apply_autoencoder(combinations, verbose=True)
+    create_windowed_files(combinations)
+    apply_autoencoder(combinations, epochs=30, verbose=True)
 
     #Initialize a receptacle dictionary (DICT1)
     # For each combination:

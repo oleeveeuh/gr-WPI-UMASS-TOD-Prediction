@@ -52,7 +52,6 @@ class Autoencoder(nn.Module):
             nn.Linear(64, 128),
             nn.ReLU(),
             nn.Linear(128, original_dim),
-            nn.Sigmoid()  # Assuming the input features were scaled between 0 and 1
         )
 
     def forward(self, x):

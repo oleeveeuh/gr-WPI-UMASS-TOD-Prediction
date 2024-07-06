@@ -95,6 +95,22 @@ def create_windows(combination, w_size = 3, verbose = False):
         i += 1
     return results
 
+
+def reshape_and_save(encoded_output, original_meta_df, num_samples, num_genes, encoding_dim, output_file):
+    # Reshape the encoded output to match the original structure (minus the dropped columns)
+    reshaped_output = encoded_output.reshape(num_samples, num_genes)
+
+    # Create a DataFrame from the reshaped array
+    encoded_df = pd.DataFrame(reshaped_output, columns=[f'encoded_feature_{i}' for i in range(num_genes)])
+
+    # Concatenate with the original metadata DataFrame
+    final_df = pd.concat([original_meta_df.reset_index(drop=True), encoded_df], axis=1)
+
+    # Save to CSV
+    final_df.to_csv(output_file, index=False)
+
+    print(f"Saved reshaped data to {output_file}")
+
 encoding_dim = 1
 
 def apply_autoencoder(combinations, verbose=False):
@@ -124,6 +140,10 @@ def apply_autoencoder(combinations, verbose=False):
             train_df[column] = train_df[column].apply(ast.literal_eval)
             test_df[column] = test_df[column].apply(ast.literal_eval)
 
+        train_sample_num = train_df.shape[0]
+        test_sample_num = test_df.shape[0]
+        gene_num = train_df.shape[1]
+
         if verbose:
             print(train_df.shape)
         
@@ -133,7 +153,7 @@ def apply_autoencoder(combinations, verbose=False):
 
         # Apply pd.Series to expand each list into its own row
         expanded_train = stacked_train.apply(pd.Series)
-        expanded_test = stacked_train.apply(pd.Series)
+        expanded_test = stacked_test.apply(pd.Series)
 
         # Reset the index to flatten it, and optionally drop the old indices
         reshaped_train_df = expanded_train.reset_index(drop=True)
@@ -149,7 +169,7 @@ def apply_autoencoder(combinations, verbose=False):
 
         if verbose:
             print(train_tensor.shape)
-            
+
         num_features = train_tensor.shape[1]
 
         # Initialize Autoencoder and training essentials
@@ -189,18 +209,10 @@ def apply_autoencoder(combinations, verbose=False):
             encoded_train = encoded_train.to('cpu').numpy()
             encoded_test = encoded_test.to('cpu').numpy()
 
-        # Combine the encoded data with the kept columns
-        encoded_train_df = pd.DataFrame(encoded_train, columns=[f'encoded_feature_{i}' for i in range(encoding_dim)])
-        encoded_test_df = pd.DataFrame(encoded_test, columns=[f'encoded_feature_{i}' for i in range(encoding_dim)])
-        final_train_df = pd.concat([train_head_df.reset_index(drop=True), encoded_train_df], axis=1)
-        final_test_df = pd.concat([test_head_df.reset_index(drop=True), encoded_test_df], axis=1)
+        # Combine the encoded data with the kept column
+        reshape_and_save(encoded_train, train_head_df, train_sample_num, gene_num, encoding_dim, os.path.join(encoded_path, train_file))
+        reshape_and_save(encoded_test, test_head_df, test_sample_num, gene_num, encoding_dim, os.path.join(encoded_path, test_file))
 
-        # Save encoded outputs
-        final_train_df.to_csv(os.path.join(encoded_path, train_file), index=False)
-        final_test_df.to_csv(os.path.join(encoded_path, test_file), index=False)
-
-        if verbose:
-            print(f"Encoded data saved for {train_file} and {test_file}")
 
 
 def create_windowed_files(combinations):

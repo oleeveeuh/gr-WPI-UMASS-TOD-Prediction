@@ -226,16 +226,16 @@ def create_windowed_files(combinations):
             windows[window].to_csv(path, index=False)
 
 if __name__ == "__main__":
-    # combinations = filter_combinations(
-    #     targets=[Target.BA11, Target.BA47],
-    #     splits=[Split.S60, Split.S70, Split.S80],
-    #     n_methods=[Normalize_Method.Log, Normalize_Method.MM]
-    # )
     combinations = filter_combinations(
-        targets=[Target.BA11],
-        splits=[Split.S60],
-        n_methods=[Normalize_Method.Log]
+        targets=[Target.BA11, Target.BA47],
+        splits=[Split.S60, Split.S70, Split.S80],
+        n_methods=[Normalize_Method.Log, Normalize_Method.MM]
     )
+    # combinations = filter_combinations(
+    #     targets=[Target.BA11],
+    #     splits=[Split.S60],
+    #     n_methods=[Normalize_Method.Log]
+    # )
     create_windowed_files(combinations)
     apply_autoencoder(combinations, epochs=30, verbose=True)
 

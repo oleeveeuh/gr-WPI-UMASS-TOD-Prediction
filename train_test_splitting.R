@@ -13,8 +13,8 @@ split_hourly <- function(data) {
   # TOD is in a 2 hour window. Loop through all possible hour values
   bin_cutoffs <- c(0:12) * 2
   for (i in 1:(length(bin_cutoffs) - 1)) {
-    output_list[i] <- list(data[(data$TOD_pos >= bin_cutoffs[[i]] &
-                                   data$TOD_pos < bin_cutoffs[[i +
+    output_list[i] <- list(data[(data$TOD >= bin_cutoffs[[i]] &
+                                   data$TOD < bin_cutoffs[[i +
                                                                  1]]), ])
   }
   return(output_list)
@@ -111,12 +111,6 @@ for (i in 1:3) {
 }
 
 all_dfs <- unlist(unlist(output, recursive = FALSE), recursive = FALSE)
-
-for (df in names(all_dfs)) {
-  names(all_dfs[[df]])[names(all_dfs[[df]]) == 'TOD_pos'] <- 'TOD'
-}
-
-
 
 save(all_dfs, file = "data/all_dfs.RData")
 

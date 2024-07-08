@@ -16,7 +16,7 @@ circadian_genes <- c("C1orf51" , "NR1D1" , "PER3" , "PER2" , "KCNH4" , "NR1D2" ,
 patient_info <- patient_info_raw[!is.na(patient_info_raw$TOD), ]
 patient_info['TOD_pos'] <- patient_info['TOD'] + 6
 
-## Got rid of thise because we are not including cause of death in final analysis, but keeping code for later just in case
+## Got rid of this because we are not including cause of death in final analysis, but keeping code for later just in case
       # |> 
       #   # combine it with cause of death info, specify all other cols to join on to avoid accidental duplicates
       #   left_join(cause_death[, 2:9], by = c("Age" = "Age", "PMI" = "PMI", "pH" = "pH", "RIN" = "RIN", "Sex" = "Sex", "Race" = "Race" ))
@@ -58,24 +58,27 @@ full_df <- samples |>
   filter(gene_assignment != "---")
 
 full_df <- full_df |> 
-  select(-c(sample_id, gene_ID, gene_assignment)) |> ## Work Here!
+  select(-c(sample_id, gene_ID, gene_assignment)) |>
   group_by(patient_ID, BA_ID, gene_name) |> 
   mutate(expression_level = max(expression_level)) |> 
+  mutate(TOD = TOD_pos) |> 
   distinct() |> 
   filter(gene_name %in% circadian_genes) |> 
   ungroup() |> 
-  select(-patient_ID) |> 
+  select(-c(patient_ID, TOD_pos)) |> 
   mutate(Sex = ifelse(Sex == "M", 1, 0))
 
 full_df <- full_df |> 
-  pivot_wider(names_from = gene_name, values_from = expression_level)
+  pivot_wider(names_from = gene_name, values_from = expression_level) |> 
+  # Arrange dataframe by ascending TOD value
+  arrange(TOD)
 
-final_data_BA11 <- full_df[full_df$BA_ID == 11, -1] 
+final_data_BA11 <- full_df[full_df$BA_ID == 11, -1]
 final_data_BA47 <- full_df[full_df$BA_ID == 47, -1]
 
-write.csv(full_df[, -1], "data/wrangled data/full_data_6_17_2024.csv", row.names = FALSE)
-write.csv(final_data_BA11, "data/wrangled data/BA11_data_6_17_2024.csv", row.names = FALSE)
-write.csv(final_data_BA47, "data/wrangled data/BA47_data_6_17_2024.csv", row.names = FALSE)
+write.csv(full_df[, -1], "data/wrangled_data/full_data_6_17_2024.csv", row.names = FALSE)
+write.csv(final_data_BA11, "data/wrangled_data/BA11_data_6_17_2024.csv", row.names = FALSE)
+write.csv(final_data_BA47, "data/wrangled_data/BA47_data_6_17_2024.csv", row.names = FALSE)
 
 
 

@@ -171,7 +171,7 @@ def read_reduced_file(target, split, n_method, dr_method, variance):
 
 
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_process_function = None):
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file,data_process_function = None):
     '''
     train_test_model
     Input:
@@ -188,7 +188,7 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
         if verbose:
             print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         
-        X_train, y_train, X_test, y_test = read_reduced_file(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
+        X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
         if use_numpy:
             X_train = X_train.values.astype(np.float32)
             X_test = X_test.values.astype(np.float32)

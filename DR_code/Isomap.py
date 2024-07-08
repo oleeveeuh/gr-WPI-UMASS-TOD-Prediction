@@ -60,27 +60,28 @@ def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_co
         print("No suitable configuration found with score above the threshold.")
 
     return best_configuration
-
+reduce_folder = 'reduced_encoded'
+encoded_folder = 'encoded'
 # Function to process and save data
 def process_and_save_data(base_dir, folder, split, method):
     
     # Construct the file paths for train
-    train_name = f"{folder}_{split}_{method}_train.csv"
-    test_name = f"{folder}_{split}_{method}_test.csv"
-    output_train_file = os.path.join(base_dir, '..','reduced_data', f"{folder}_{split}_{method}_Isomap_90_train.csv")
-    output_test_file = os.path.join(base_dir, '..','reduced_data', f"{folder}_{split}_{method}_Isomap_90_test.csv")
+    train_name = f"{folder}_{split}_{method}_window3_train.csv"
+    test_name = f"{folder}_{split}_{method}_window3_test.csv"
+    output_train_file = os.path.join(base_dir, '..',reduce_folder, f"{folder}_{split}_{method}_window3_Isomap_90_train.csv")
+    output_test_file = os.path.join(base_dir, '..',reduce_folder, f"{folder}_{split}_{method}_window3_Isomap_90_test.csv")
 
     if folder == folder_full:
-        train_name = f"full_{split}_{method}_train.csv"
-        test_name = f"full_{split}_{method}_test.csv"
-        output_train_file = os.path.join(base_dir, '..','reduced_data', f"full_{split}_{method}_Isomap_90_train.csv")
-        output_test_file = os.path.join(base_dir, '..','reduced_data', f"full_{split}_{method}_Isomap_90_test.csv")
+        train_name = f"full_{split}_{method}_window3_train.csv"
+        test_name = f"full_{split}_{method}_window3_test.csv"
+        output_train_file = os.path.join(base_dir, '..',reduce_folder, f"full_{split}_{method}_window3_Isomap_90_train.csv")
+        output_test_file = os.path.join(base_dir, '..',reduce_folder, f"full_{split}_{method}_window3_Isomap_90_test.csv")
 
-    train_file = os.path.join(base_dir, folder, train_name)
+    train_file = os.path.join(base_dir, '..', encoded_folder, train_name)
     
 
     # file path for test
-    test_file = os.path.join(base_dir, folder, test_name)
+    test_file = os.path.join(base_dir, '..', encoded_folder, test_name)
     
     
     # Load the data
@@ -125,7 +126,7 @@ def process_and_save_data(base_dir, folder, split, method):
 
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', 'data', 'train_test_split_data')
+data_dir = os.path.join(script_dir, '..', 'data', 'window')
 data_dir = os.path.normpath(data_dir)
 
 # folder names
@@ -139,14 +140,14 @@ method_log = 'log'
 method_MM = 'MM'
 method_None = 'nonnormalized'
 
-folders = [folder_BA11, folder_BA47, folder_full]
+folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM]
 
-# for folder in folders:
-#     for split in splits:
-#         for method in methods:
-#             process_and_save_data(data_dir, folder, split, method)
-for split in splits:
-    for method in methods:
-        process_and_save_data(data_dir, folder_full, split, method)
+for folder in folders:
+    for split in splits:
+        for method in methods:
+            process_and_save_data(data_dir, folder, split, method)
+# for split in splits:
+#     for method in methods:
+#         process_and_save_data(data_dir, folder_full, split, method)

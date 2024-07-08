@@ -54,6 +54,8 @@ script_dir = os.path.dirname(__file__)
 data_dir = os.path.join(script_dir, '..', 'data', 'reduced_data')
 data_dir = os.path.normpath(data_dir)
 
+encoded_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_encoded')
+encoded_data_dir = os.path.normpath(encoded_data_dir)
 
 def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=None, variances=None):
     """
@@ -169,9 +171,40 @@ def read_reduced_file(target, split, n_method, dr_method, variance):
 
     return X_train, y_train, X_test, y_test
 
+# read from reduced data folder
+def read_reduced_encoded_file(target, split, n_method, dr_method, variance):
+    '''
+    Input:
+        target_data(BA11, BA47, Combine)
+        normalize_method(log, MM, NN)
+        split(60, 70, 80)
+        DR_method(ICA, KPCA, PCA, Isomap)
+        variance(90, 95)
 
+    Output:
+        X_train, y_train, X_test, y_test
+    '''
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file,data_process_function = None):
+    # Construct the file paths for train
+    train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window3_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
+    test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window3_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
+
+    train_file = os.path.join(encoded_data_dir, train_name)
+    test_file = os.path.join(encoded_data_dir, test_name)
+    
+    # Load data
+    train_data = pd.read_csv(train_file)
+    test_data = pd.read_csv(test_file)
+
+    y_train = train_data.pop('TOD')
+    X_train = train_data
+
+    y_test = test_data.pop('TOD')
+    X_test = test_data
+
+    return X_train, y_train, X_test, y_test
+
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file, data_process_function = None):
     '''
     train_test_model
     Input:
@@ -296,7 +329,7 @@ def get_model_row_mapping(sheet, start_col, verbose = False):
                     print(f"Model '{model_name}' already mapped to row {model_row_mapping[standardized_model_name]}")
     return model_row_mapping
 
-def write_results_to_excel(results_df, verbose=False):
+def write_results_to_excel(results_df, target_folder = 'performance_sheets', verbose=False):
     results_df['split'] = results_df['split'].astype(str)
     results_df['variance'] = results_df['variance'].astype(str)
     # Group results by target
@@ -305,7 +338,7 @@ def write_results_to_excel(results_df, verbose=False):
     changes_made = False  # Flag to track if any changes are made
 
     for target_name, target_results in grouped_results:
-        path = os.path.join(data_dir, '..', 'performance_sheets', f'{target_name} Overall Model Peformance Results.xlsx')
+        path = os.path.join(data_dir, '..', target_folder, f'{target_name} Overall Model Peformance Results.xlsx')
         # Load the existing Excel
         workbook = openpyxl.load_workbook(path)
         

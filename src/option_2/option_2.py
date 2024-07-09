@@ -215,8 +215,8 @@ def apply_autoencoder(combinations, epochs = 10,verbose=False):
 
 def create_windowed_files(combinations):
     os.makedirs(window_data_path, exist_ok=True)
-# Get all the possible method combinations
     
+    # Get all the possible method combinations
     for combo in combinations:
         windows = create_windows(combo, w_size=WINDOW_SIZE, verbose = True)
         target, split, n_method = combo
@@ -238,15 +238,3 @@ if __name__ == "__main__":
     # )
     create_windowed_files(combinations)
     apply_autoencoder(combinations, epochs=30, verbose=True)
-
-    #Initialize a receptacle dictionary (DICT1)
-    # For each combination:
-        # Read the respective files - generate a warning if the file doesn't exist
-        # Assign the files to a dictionary with setup key=filename : value = pd.DataFrame. There will be two files
-        # Initialize a receptacle dictionary (DICT2) with setup keys= [TOD, Age, Sex, AE_output]: value=respective values
-            # For each row (except first and last) in each file:
-                # Generate a 3x235 array containing the gene expressions for each TOD.
-                # Feed the 3x235 array into autoencoder, receive a single number output (AE_output).
-                # join AE_output to a row with the TOD, Age, and Sex of the second row from the original 3x235 array
-                # Concat output row to DICT2
-            #Before moving onto next combination, add DICT2 to DICT1 with setup key=filename+"_AE"

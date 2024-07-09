@@ -6,7 +6,7 @@ import re
 import pandas as pd
 
 # For Option 1:
-"""BA11 = "../data/train_test_split_data/BA11"
+BA11 = "../data/train_test_split_data/BA11"
 BA47 = "../data/train_test_split_data/BA47"
 full_data = "../data/train_test_split_data/full_data"
 
@@ -30,14 +30,13 @@ for subfolder in folder_list:
                     elif ((region + "_test" not in TOD_dict.keys()) & (region in file) & (split in file) & ("test" in file)):
                         TOD_dict[region + "_" + split + "_test"] = data_dict[file][2]
 """
+# For Option 2:
 file_names = []
 data_dict = {}
 regions = ["BA11", "BA47", "full"]
 splits = ["80", "70", "60"]
 TOD_dict = {}
 
-
-# For Option 2:
 for file in os.listdir("../data/encoded"):
         if fnmatch.fnmatch(file, '*.csv'):
             name = re.match(".+(?=_(train)|_(test)\.csv)", file)
@@ -49,7 +48,7 @@ for file in os.listdir("../data/encoded"):
                         TOD_dict[region + "_" + split + "_train"] = data_dict[file][2]
                     elif ((region + "_test" not in TOD_dict.keys()) & (region in file) & (split in file) & ("test" in file)):
                         TOD_dict[region + "_" + split + "_test"] = data_dict[file][2]
-
+"""
 
 file_names = list(set(file_names))
 
@@ -101,10 +100,10 @@ for data_group in list(final_data_grouping.keys()):
 
 
     #write to csv files
-    train_file_name_95 = "../data/reduced_encoded/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
-    test_file_name_95 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
-    train_file_name_90 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
-    test_file_name_90 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+    train_file_name_95 = "../data/reduced_data/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
+    test_file_name_95 = "../data/reduced_data/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
+    train_file_name_90 = "../data/reduced_data/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
+    test_file_name_90 = "../data/reduced_data/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
 
     for region in regions:
         for split in splits:

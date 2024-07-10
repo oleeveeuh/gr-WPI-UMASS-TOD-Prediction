@@ -105,6 +105,11 @@ for data_group in list(final_data_grouping.keys()):
     train_file_name_90 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
     test_file_name_90 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
 
+    print(train_file_name_95)
+    print(test_file_name_95)
+    print(train_file_name_90)
+    print(test_file_name_90)
+
     for region in regions:
         for split in splits:
             if ((region in train_file_name_95) & (split in train_file_name_95)):
@@ -114,7 +119,7 @@ for data_group in list(final_data_grouping.keys()):
                 S_ica_90_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
 
 
-    S_ica_95_train.to_csv(train_file_name_95, index=False)
+    """S_ica_95_train.to_csv(train_file_name_95, index=False)
     S_ica_95_test.to_csv(test_file_name_95, index=False)
     S_ica_90_train.to_csv(train_file_name_90, index=False)
-    S_ica_90_test.to_csv(test_file_name_90, index=False)
+    S_ica_90_test.to_csv(test_file_name_90, index=False)"""

@@ -44,12 +44,21 @@ def all_nans(lst):
     return all((x is None) for x in lst)
 
 if __name__ == "__main__":
+    # Make DF for Option 1 Model Results
     script_dir = os.path.dirname(__file__)
     performance_dir = os.path.join(script_dir, '..', 'data', 'performance_sheets')
     performance_dir = os.path.normpath(performance_dir)
 
     total_df = find_best_model(performance_dir)
     print(total_df)
-    total_df.to_csv(script_dir+"/all_models_by_performance.csv", )
+    total_df.to_csv(script_dir+"/opt_1_all_models_performance.csv", )
 
+    # Make DF for Option 2 Mdoel Results
+    """script_dir = os.path.dirname(__file__)
+    performance_dir = os.path.join(script_dir, '..', 'data', 'performance_sheets_option2')
+    performance_dir = os.path.normpath(performance_dir)
+
+    total_df = find_best_model(performance_dir)
+    print(total_df)
+    total_df.to_csv(script_dir+"/opt_2_all_models_performance.csv", )"""
 

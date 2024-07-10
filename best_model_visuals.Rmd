@@ -1,0 +1,83 @@
+---
+title: "Best Models by Train Split, DN, DR, Variance Level"
+author: "Tillie Slosser"
+date: "2024-07-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+
+```{r}
+library(tidyverse)
+
+# Read in Data
+opt1_results = read.csv("src/opt_1_all_models_performance.csv")[, -1] #First column is index right now, might change later
+opt2_results = read.csv("src/opt_2_all_models_performance.csv")[, -1]
+```
+
+```{r}
+input_list <- list("Option 1 Best Models" = opt1_results, "Option 2 Best Models" = opt2_results)
+output_list <- list()
+
+error_metrics <- c("MSE", "MAE", "MAPE", "RMSE", "SMAPE")
+
+o_name_id <- 1
+out_id <- 1
+for (df in input_list) {
+  option_name <- names(input_list)[o_name_id]
+  wrangled_df <- df |> 
+    mutate(data = str_extract(df$full_df_name, ".*(?= )")) |> 
+    mutate(model = case_when(model == "Linear Regressor" ~ "Lin.", 
+                             model == "Support Vector Regressor" ~ "SVR", 
+                             model == "Decision Tree Regressor" ~ "Decision\nTree", 
+                             model == "K-Neighbors Regressor" ~ "K-Neigh", 
+                             model == "Stochastic Gradient Descent Regressor" ~ "Stoch.\nGrad. Desc.", 
+                             model == "Voting Regressor" ~ "Voting", 
+                             model == "Stacking Regressor" ~ "Stacking", 
+                             model == "Gradient Boosting Regressor" ~ "Grad.\nBoost", 
+                             model == "Random Forest Regressor" ~ "Rand.\nForest", 
+                             model == "AdaBoostRegressor" ~ "Ada\nBoost", 
+                             model == "BaggingRegressor" ~ "Bagging", 
+                             model == "ExtraTreesRegressor" ~ "Extra\nTrees", 
+                             model == "XGBoost Regressor" ~ "XGBoost", 
+                             model == "Multilayer Perceptron" ~ "MLP", 
+                             model == "Long Short-Term Memory Network" ~ "LSTM", 
+                             model == "Convolutional neural network" ~ "CNN")) |> 
+    mutate(DR_method = str_extract(df$full_df_name, "(PCA|ICA|Isomap|KPCA)_\\d{2}")) |> 
+    mutate(norm_split = paste(str_extract(df$full_df_name, "(MinMax)|(Log)"), str_extract(df$full_df_name, "(?<=Overall_).*(?=:)"), sep = "_")) |> 
+    select(full_df_name, model, MSE:data, DR_method:norm_split)
+  for (metric in error_metrics) {
+    one_metric <- wrangled_df |> 
+      select(full_df_name, data, model, DR_method, norm_split, all_of(metric)) |> 
+      group_by(full_df_name) |> 
+      arrange(.data[[metric]], .by_group = TRUE) |> 
+      distinct(full_df_name, .keep_all = TRUE)
+    output_list[[out_id]] <- one_metric
+    names(output_list)[out_id] <- paste(option_name, "by", metric)
+    out_id <- out_id + 1
+  }
+  o_name_id <- o_name_id + 1
+}
+```
+
+```{r, fig.width = 12, fig.height = 6.1}
+for (df_id in 1:10) {
+  metric <- colnames(output_list[[df_id]])[6]
+  plot <- ggplot(output_list[[df_id]], aes(x = norm_split, y = DR_method, fill = .data[[metric]])) +
+      geom_tile(color = "white") +
+      geom_text(aes(label = model), color = "white", size = 3.5, fontface = "bold") +
+      scale_fill_gradient(low = "blue", high = "red") +
+      facet_wrap(~data)+
+      theme_minimal() +
+      labs(title = names(output_list)[df_id]) + 
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right"
+      )
+  print(plot)
+}
+```
+

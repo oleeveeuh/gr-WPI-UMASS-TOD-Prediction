@@ -231,10 +231,5 @@ if __name__ == "__main__":
         splits=[Split.S60, Split.S70, Split.S80],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM]
     )
-    # combinations = filter_combinations(
-    #     targets=[Target.BA11],
-    #     splits=[Split.S60],
-    #     n_methods=[Normalize_Method.Log]
-    # )
     create_windowed_files(combinations)
     apply_autoencoder(combinations, epochs=30, verbose=True)

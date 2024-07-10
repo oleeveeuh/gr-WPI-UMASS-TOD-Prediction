@@ -5,7 +5,7 @@ import fnmatch
 import re
 import pandas as pd
 """
-# For Option 1:
+# For Option 1:____________________________________________________________
 BA11 = "../data/train_test_split_data/BA11"
 BA47 = "../data/train_test_split_data/BA47"
 full_data = "../data/train_test_split_data/full_data"
@@ -22,15 +22,10 @@ for subfolder in folder_list:
         if fnmatch.fnmatch(file, '*.csv'):
             name = re.match(".+(?=_(train)|_(test)\.csv)", file)
             file_names.append(name.group())
-            data_dict[file] = pd.DataFrame(np.genfromtxt(subfolder + "/" + file, delimiter=',', skip_header=1))
-            for region in regions:
-                for split in splits:
-                    if ((region + "_train" not in TOD_dict.keys()) & (region in file) & (split in file) & ("train" in file)):
-                        TOD_dict[region + "_" + split + "_train"] = data_dict[file][2]
-                    elif ((region + "_test" not in TOD_dict.keys()) & (region in file) & (split in file) & ("test" in file)):
-                        TOD_dict[region + "_" + split + "_test"] = data_dict[file][2]
+            data_dict[file] = pd.read_csv(subfolder + "/" + file)
 """
-# For Option 2:
+
+# For Option 2:____________________________________________________________
 file_names = []
 data_dict = {}
 regions = ["BA11", "BA47", "full"]
@@ -41,20 +36,28 @@ for file in os.listdir("../data/encoded"):
         if fnmatch.fnmatch(file, '*.csv'):
             name = re.match(".+(?=_(train)|_(test)\.csv)", file)
             file_names.append(name.group())
-            data_dict[file] = pd.DataFrame(np.genfromtxt("../data/encoded" + "/" + file, delimiter=',', skip_header=1))
-            for region in regions:
-                for split in splits:
-                    if ((region + "_train" not in TOD_dict.keys()) & (region in file) & (split in file) & ("train" in file)):
-                        TOD_dict[region + "_" + split + "_train"] = data_dict[file][2]
-                    elif ((region + "_test" not in TOD_dict.keys()) & (region in file) & (split in file) & ("test" in file)):
-                        TOD_dict[region + "_" + split + "_test"] = data_dict[file][2]
+            data_dict[file] = pd.read_csv("../data/encoded" + "/" + file)
+
+# For Option 3:____________________________________________________________
+file_names = []
+data_dict = {}
+regions = ["BA11", "BA47", "full"]
+splits = ["80", "70", "60"]
+TOD_dict = {}
+
+for file in os.listdir("../data/encoded"):
+        if fnmatch.fnmatch(file, '*.csv'):
+            name = re.match(".+(?=_(train)|_(test)\.csv)", file)
+            file_names.append(name.group())
+            data_dict[file] = pd.read_csv("../data/encoded" + "/" + file)
+
 
 
 file_names = list(set(file_names))
 
-#check TOD split lengths
+"""#check TOD split lengths
 for tod in TOD_dict.keys():
-    print("Length of ", tod, ": ", len(TOD_dict[tod]))
+    print("Length of ", tod, ": ", len(TOD_dict[tod]))"""
 
 final_data_grouping = {}
 for key in data_dict.keys():
@@ -64,21 +67,24 @@ for key in data_dict.keys():
         if name in key:
             final_data_grouping[name][key] = data_dict[key]
 
-# Print groupings
+"""# Print groupings
 for data_group in final_data_grouping.keys():
     print("Data group:", data_group)
     for df in final_data_grouping[data_group].keys():
         print("        " , df)
-
+"""
 # Assuming final_data_grouping is already populated
 for data_group in list(final_data_grouping.keys()):
     if "nonnormalized" in data_group:
         continue
     for dataset in final_data_grouping[data_group].keys():
+        print(final_data_grouping[data_group][dataset])
         if "train" in dataset:
+            train_TOD = final_data_grouping[data_group][dataset]['TOD']
             to_DR_train = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)
             train_name = dataset
         else:
+            test_TOD = final_data_grouping[data_group][dataset]['TOD']
             to_DR_test = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)
             test_name = dataset
     ica_test = FastICA(n_components=100, algorithm='parallel', whiten=True)
@@ -98,28 +104,25 @@ for data_group in list(final_data_grouping.keys()):
     S_ica_90_train = pd.DataFrame(ica_90.fit_transform(to_DR_train))
     S_ica_90_test = pd.DataFrame(ica_90.transform(to_DR_test))
 
+    # Append TOD back on
+    S_ica_95_train['TOD'] = train_TOD
+    S_ica_95_test['TOD'] = test_TOD
+    S_ica_90_train['TOD'] = train_TOD
+    S_ica_90_test['TOD'] = test_TOD
 
-    #write to csv files
-    train_file_name_95 = "../data/reduced_encoded/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
-    test_file_name_95 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
-    train_file_name_90 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
-    test_file_name_90 = "../data/reduced_encoded/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+
+    #write to csv files - MAKE SURE TO CHANGE DESTINATION IF NECESSARY
+    train_file_name_95 = "../data/reduced_CNN/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
+    test_file_name_95 = "../data/reduced_CNN/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
+    train_file_name_90 = "../data/reduced_CNN/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
+    test_file_name_90 = "../data/reduced_CNN/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
 
     print(train_file_name_95)
     print(test_file_name_95)
     print(train_file_name_90)
     print(test_file_name_90)
 
-    for region in regions:
-        for split in splits:
-            if ((region in train_file_name_95) & (split in train_file_name_95)):
-                S_ica_95_train['TOD'] = TOD_dict[region + "_" + split + "_train"]
-                S_ica_95_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
-                S_ica_90_train['TOD'] = TOD_dict[region + "_" + split + "_train"]
-                S_ica_90_test['TOD'] = TOD_dict[region + "_" + split + "_test"]
-
-
-    """S_ica_95_train.to_csv(train_file_name_95, index=False)
+    S_ica_95_train.to_csv(train_file_name_95, index=False)
     S_ica_95_test.to_csv(test_file_name_95, index=False)
     S_ica_90_train.to_csv(train_file_name_90, index=False)
-    S_ica_90_test.to_csv(test_file_name_90, index=False)"""
+    S_ica_90_test.to_csv(test_file_name_90, index=False)

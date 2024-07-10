@@ -61,31 +61,28 @@ def find_best_isomap_configuration(X, min_neighbors=10, max_neighbors=50, min_co
 
     return best_configuration
 
-reduce_encoded_folder = 'reduced_encoded'
-reduce_folder = 'reduced_data'
-encoded_folder = 'encoded'
-train_test_split = 'train_test_split_data'
+
 
 # Function to process and save data
-def process_and_save_data(base_dir, folder,split, method, output_folder, input_folder ,output_postfix = '', intput_postfix = ''):
+def process_and_save_data(base_dir, folder,split, method, output_folder, input_folder , postfix = ''):
     
     # Construct the file paths for train
-    train_name = f"{folder}_{split}_{method}_{intput_postfix}train.csv"
-    test_name = f"{folder}_{split}_{method}_{intput_postfix}test.csv"
-    output_train_file = os.path.join(base_dir, '..',output_folder, f"{folder}_{split}_{method}_{output_postfix}Isomap_90_train.csv")
-    output_test_file = os.path.join(base_dir, '..',output_folder, f"{folder}_{split}_{method}_{output_postfix}Isomap_90_test.csv")
+    train_name = f"{folder}_{split}_{method}_{postfix}train.csv"
+    test_name = f"{folder}_{split}_{method}_{postfix}test.csv"
+    output_train_file = os.path.join(base_dir, '..',output_folder, f"{folder}_{split}_{method}_{postfix}Isomap_90_train.csv")
+    output_test_file = os.path.join(base_dir, '..',output_folder, f"{folder}_{split}_{method}_{postfix}Isomap_90_test.csv")
 
     if folder == folder_full:
-        train_name = f"full_{split}_{method}_{intput_postfix}train.csv"
-        test_name = f"full_{split}_{method}_{intput_postfix}test.csv"
-        output_train_file = os.path.join(base_dir, '..',output_folder, f"full_{split}_{method}_{output_postfix}Isomap_90_train.csv")
-        output_test_file = os.path.join(base_dir, '..',output_folder, f"full_{split}_{method}_{output_postfix}Isomap_90_test.csv")
+        train_name = f"full_{split}_{method}_{postfix}train.csv"
+        test_name = f"full_{split}_{method}_{postfix}test.csv"
+        output_train_file = os.path.join(base_dir, '..',output_folder, f"full_{split}_{method}_{postfix}Isomap_90_train.csv")
+        output_test_file = os.path.join(base_dir, '..',output_folder, f"full_{split}_{method}_{postfix}Isomap_90_test.csv")
 
-    train_file = os.path.join(base_dir, '..', input_folder, folder, train_name)
+    train_file = os.path.join(base_dir, '..', input_folder, train_name)
     
 
     # file path for test
-    test_file = os.path.join(base_dir, '..', input_folder, folder, test_name)
+    test_file = os.path.join(base_dir, '..', input_folder, test_name)
     
     
     # Load the data
@@ -144,14 +141,21 @@ method_log = 'log'
 method_MM = 'MM'
 method_None = 'nonnormalized'
 
-folders = [folder_full]
+reduce_encoded_folder = 'reduced_encoded'
+reduce_folder = 'reduced_data'
+encoded_folder = 'encoded'
+train_test_split = 'train_test_split_data'
+postfix = 'window3_'
+
+
+folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM]
 
 for folder in folders:
     for split in splits:
         for method in methods:
-            process_and_save_data(data_dir, folder, split, method, output_folder = reduce_folder, input_folder= train_test_split)
+            process_and_save_data(data_dir, folder, split, method, output_folder = reduce_encoded_folder, input_folder= encoded_folder, postfix=postfix)
 # for split in splits:
 #     for method in methods:
 #         process_and_save_data(data_dir, folder_full, split, method)

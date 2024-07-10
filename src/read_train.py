@@ -51,8 +51,8 @@ window_size = { WindowSize.W1 : '1', WindowSize.W3 : '3' }
 RANDOM_STATE = 42
 # get the path to data
 script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, '..', 'data', 'reduced_data')
-data_dir = os.path.normpath(data_dir)
+reduced_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_data')
+reduced_data_dir = os.path.normpath(reduced_data_dir)
 
 encoded_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_encoded')
 encoded_data_dir = os.path.normpath(encoded_data_dir)
@@ -98,6 +98,7 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     effective_variances = variances if variances else []
     
     # Generate all combinations
+    # if no dr and variance, only make combination of target, split and method
     if DR_methods == None or variances == None:
         all_combinations = product(effective_targets, effective_splits, effective_n_methods)
         return list(all_combinations)
@@ -156,8 +157,8 @@ def read_reduced_file(target, split, n_method, dr_method, variance):
     train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
     test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
 
-    train_file = os.path.join(data_dir, train_name)
-    test_file = os.path.join(data_dir, test_name)
+    train_file = os.path.join(reduced_data_dir, train_name)
+    test_file = os.path.join(reduced_data_dir, test_name)
     
     # Load data
     train_data = pd.read_csv(train_file)
@@ -185,7 +186,8 @@ def read_reduced_encoded_file(target, split, n_method, dr_method, variance):
         X_train, y_train, X_test, y_test
     '''
 
-    # Construct the file paths for train
+    # TODO: change these to take dynamic window size, since this function will be passed as a parameter into another function, consider change train_test_model to 
+    # take argument list
     train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window3_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
     test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window3_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
 
@@ -210,6 +212,13 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
     Input:
         array of models
         array of model parameters
+        combinations of files
+        save_result: if save the result into a csv
+        use_numpy: convert df to numpy format
+        data_read_function: function to read data
+        data_process_function: some data needs to be transform into other form before
+                                feed into the model
+        
 
     Output:
         result, write to csv.
@@ -221,6 +230,7 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
         if verbose:
             print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         
+        # TODO: after change the data read function, change this place as well. should be taking a argument list
         X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
         if use_numpy:
             X_train = X_train.values.astype(np.float32)
@@ -279,7 +289,7 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
     if save_result:
         results_df = pd.DataFrame(results)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = os.path.join(data_dir, '..', 'program_output')
+        output_dir = os.path.join(reduced_data_dir, '..', 'program_output')
         output_dir = os.path.normpath(output_dir)
         os.makedirs(output_dir, exist_ok=True)
         results_file = os.path.join(output_dir, f'model_results_{timestamp}.csv')
@@ -338,7 +348,7 @@ def write_results_to_excel(results_df, target_folder = 'performance_sheets', ver
     changes_made = False  # Flag to track if any changes are made
 
     for target_name, target_results in grouped_results:
-        path = os.path.join(data_dir, '..', target_folder, f'{target_name} Overall Model Peformance Results.xlsx')
+        path = os.path.join(reduced_data_dir, '..', target_folder, f'{target_name} Overall Model Peformance Results.xlsx')
         # Load the existing Excel
         workbook = openpyxl.load_workbook(path)
         
@@ -414,16 +424,11 @@ def write_results_to_excel(results_df, target_folder = 'performance_sheets', ver
         
         
 
-
+# Below is an example of how to use previous functions
 if __name__ == "__main__":
-    # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
 
     # Define models
     models = {
-        '''
-        'Linear Regressor':
-        'Decision Tree Regressor':
-        '''
         'Random Forest Regressor': RandomForestRegressor(random_state=42),
         'ExtraTreesRegressor': ExtraTreesRegressor(random_state=42)
     }
@@ -454,8 +459,5 @@ if __name__ == "__main__":
     )
     
     results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True)
-    # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
     print(results_df)
-    # Convert DataFrame to list of dictionaries
-    # results_list = results_df.to_dict(orient='records')
     write_results_to_excel(results_df, verbose=True)

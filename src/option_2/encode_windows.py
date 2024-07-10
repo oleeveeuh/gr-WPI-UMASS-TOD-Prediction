@@ -16,6 +16,8 @@ from tqdm import tqdm
 import ast
 
 WINDOW_SIZE = 3
+encoding_dim = 1
+batch_size = 16
 this_script = os.path.dirname(__file__)
 encoded_path = os.path.join(this_script, '..', '..', 'data', 'encoded')
 encoded_path = os.path.normpath(encoded_path)
@@ -95,7 +97,7 @@ def create_windows(combination, w_size = 3, verbose = False):
     return results
 
 
-def reshape_and_save(encoded_output, original_meta_df, num_samples, num_genes, encoding_dim, output_file):
+def reshape_and_save(encoded_output, original_meta_df, num_samples, num_genes, output_file):
     # Reshape the encoded output to match the original structure (minus the dropped columns)
     reshaped_output = encoded_output.reshape(num_samples, num_genes)
 
@@ -110,11 +112,9 @@ def reshape_and_save(encoded_output, original_meta_df, num_samples, num_genes, e
 
     print(f"Saved reshaped data to {output_file}")
 
-encoding_dim = 1
 
 def apply_autoencoder(combinations, epochs = 10,verbose=False):
     os.makedirs(encoded_path, exist_ok=True)
-    results = []
 
     for combination in combinations:
         target, split, n_method = combination
@@ -175,7 +175,7 @@ def apply_autoencoder(combinations, epochs = 10,verbose=False):
         autoencoder = Autoencoder(num_features, encoding_dim).to(device)
         criterion = nn.MSELoss()
         optimizer = optim.Adam(autoencoder.parameters(), lr=0.001)
-        train_loader = DataLoader(TensorDataset(train_tensor), batch_size=32, shuffle=True)
+        train_loader = DataLoader(TensorDataset(train_tensor), batch_size=batch_size, shuffle=True)
 
         # Train the Autoencoder with tqdm for progress tracking
         autoencoder.train()
@@ -208,8 +208,8 @@ def apply_autoencoder(combinations, epochs = 10,verbose=False):
             encoded_test = encoded_test.to('cpu').numpy()
 
         # Combine the encoded data with the kept column
-        reshape_and_save(encoded_train, train_head_df, train_sample_num, gene_num, encoding_dim, os.path.join(encoded_path, train_file))
-        reshape_and_save(encoded_test, test_head_df, test_sample_num, gene_num, encoding_dim, os.path.join(encoded_path, test_file))
+        reshape_and_save(encoded_train, train_head_df, train_sample_num, gene_num, os.path.join(encoded_path, train_file))
+        reshape_and_save(encoded_test, test_head_df, test_sample_num, gene_num, os.path.join(encoded_path, test_file))
 
 
 

@@ -339,6 +339,9 @@ def get_model_row_mapping(sheet, start_col, verbose = False):
                     print(f"Model '{model_name}' already mapped to row {model_row_mapping[standardized_model_name]}")
     return model_row_mapping
 
+
+# TODO: option 2 have 3 window sizes. either pass in folder path like 'performance_sheets\window2' 
+# or pass the window size as a new parameter
 def write_results_to_excel(results_df, target_folder = 'performance_sheets', verbose=False):
     results_df['split'] = results_df['split'].astype(str)
     results_df['variance'] = results_df['variance'].astype(str)

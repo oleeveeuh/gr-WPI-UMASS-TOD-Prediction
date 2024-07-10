@@ -37,7 +37,8 @@ class Variance(Enum):
 
 class WindowSize(Enum):
     W1 = 0
-    W3 = 1
+    W2 = 1
+    W3 = 2
 
 # Mapping from Enums to actual values
 folder_map = {Target.BA11: 'BA11', Target.BA47: 'BA47', Target.full: 'full_data'}
@@ -47,7 +48,7 @@ n_method_map = {Normalize_Method.Log: 'log', Normalize_Method.MM: 'MM', Normaliz
 dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KPCA', DR_Method.Isomap: 'Isomap'}
 variance_map = {Variance.V90: '90', Variance.V95: '95'}
 excel_method_to_file = {'Log':'log', 'MinMax':'MM'}
-window_size = { WindowSize.W1 : '1', WindowSize.W3 : '3' }
+window_size_map = { WindowSize.W1 : 'window1', WindowSize.W2 : 'window2', WindowSize.W3 : 'window3' }
 RANDOM_STATE = 42
 # get the path to data
 script_dir = os.path.dirname(__file__)
@@ -57,7 +58,7 @@ reduced_data_dir = os.path.normpath(reduced_data_dir)
 encoded_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_encoded')
 encoded_data_dir = os.path.normpath(encoded_data_dir)
 
-def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=None, variances=None):
+def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=None, variances=None, windows = None):
     """
     Generate combinations of parameters for filtering datasets.
 
@@ -96,13 +97,15 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     effective_n_methods = n_methods if n_methods else default_n_methods
     effective_DR_methods = DR_methods if DR_methods else []
     effective_variances = variances if variances else []
+    effective_windows = windows if windows else []
     
     # Generate all combinations
     # if no dr and variance, only make combination of target, split and method
-    if DR_methods == None or variances == None:
+    if DR_methods == None or variances == None or windows == None:
         all_combinations = product(effective_targets, effective_splits, effective_n_methods)
         return list(all_combinations)
-    else:
+    
+    elif windows == None:
         all_combinations = product(effective_targets, effective_splits, effective_n_methods, effective_DR_methods, effective_variances)
         # Filter combinations to exclude variance 95 with Isomap
         filtered_combinations = [
@@ -111,6 +114,15 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
         ]
         # Return the filtered combinations
         return list(filtered_combinations)
+    
+    else: 
+        all_combinations = product(effective_targets, effective_splits, effective_n_methods, effective_DR_methods, effective_variances, effective_windows)
+        filtered_combinations = [
+            combo for combo in all_combinations 
+            if not (combo[4] == Variance.V95 and combo[3] == DR_Method.Isomap)
+        ]
+        return list(filtered_combinations)
+
 
 # read from train_test_split_data
 def read_data_file(target, split, n_method, split_xy = True):
@@ -173,7 +185,7 @@ def read_reduced_file(target, split, n_method, dr_method, variance):
     return X_train, y_train, X_test, y_test
 
 # read from reduced data folder
-def read_reduced_encoded_file(target, split, n_method, dr_method, variance):
+def read_reduced_encoded_file(target, split, n_method, dr_method, variance, window_size):
     '''
     Input:
         target_data(BA11, BA47, Combine)
@@ -188,8 +200,8 @@ def read_reduced_encoded_file(target, split, n_method, dr_method, variance):
 
     # TODO: change these to take dynamic window size, since this function will be passed as a parameter into another function, consider change train_test_model to 
     # take argument list
-    train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window3_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
-    test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window3_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
+    train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
+    test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
 
     train_file = os.path.join(encoded_data_dir, train_name)
     test_file = os.path.join(encoded_data_dir, test_name)
@@ -206,7 +218,7 @@ def read_reduced_encoded_file(target, split, n_method, dr_method, variance):
 
     return X_train, y_train, X_test, y_test
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file, data_process_function = None):
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file, data_process_function = None, windows = False):
     '''
     train_test_model
     Input:
@@ -226,12 +238,21 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
     results = []
     
     for combination in combinations:
-        target, split, n_method, dr_method, variance = combination
-        if verbose:
-            print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         
         # TODO: after change the data read function, change this place as well. should be taking a argument list
-        X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
+        if windows:
+            target, split, n_method, dr_method, variance, window_size = combination
+            X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance, window_size = window_size)
+            if verbose:
+                print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
+        
+        else: 
+            target, split, n_method, dr_method, variance = combination
+            X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
+            if verbose:
+                print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
+        
+
         if use_numpy:
             X_train = X_train.values.astype(np.float32)
             X_test = X_test.values.astype(np.float32)
@@ -342,9 +363,10 @@ def get_model_row_mapping(sheet, start_col, verbose = False):
 
 # TODO: option 2 have 3 window sizes. either pass in folder path like 'performance_sheets\window2' 
 # or pass the window size as a new parameter
-def write_results_to_excel(results_df, target_folder = 'performance_sheets', verbose=False):
+def write_results_to_excel(results_df, target_folder = 'performance_sheets', windows = False, verbose=False):
     results_df['split'] = results_df['split'].astype(str)
     results_df['variance'] = results_df['variance'].astype(str)
+
     # Group results by target
     grouped_results = results_df.groupby('target')
 
@@ -352,6 +374,7 @@ def write_results_to_excel(results_df, target_folder = 'performance_sheets', ver
 
     for target_name, target_results in grouped_results:
         path = os.path.join(reduced_data_dir, '..', target_folder, f'{target_name} Overall Model Peformance Results.xlsx')
+       
         # Load the existing Excel
         workbook = openpyxl.load_workbook(path)
         

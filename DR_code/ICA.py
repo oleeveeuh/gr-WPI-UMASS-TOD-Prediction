@@ -1,128 +1,178 @@
 import numpy as np
 from sklearn.decomposition import FastICA
-import os
-import fnmatch
-import re
 import pandas as pd
-"""
+
 # For Option 1:____________________________________________________________
-BA11 = "../data/train_test_split_data/BA11"
-BA47 = "../data/train_test_split_data/BA47"
-full_data = "../data/train_test_split_data/full_data"
-
-folder_list = [BA11, BA47, full_data]
-data_dict = {}
-file_names = []
-TOD_dict = {}
 regions = ["BA11", "BA47", "full"]
 splits = ["80", "70", "60"]
+normals = ["log", "MM"]
 
-for subfolder in folder_list:
-    for file in os.listdir(subfolder):
-        if fnmatch.fnmatch(file, '*.csv'):
-            name = re.match(".+(?=_(train)|_(test)\.csv)", file)
-            file_names.append(name.group())
-            data_dict[file] = pd.read_csv(subfolder + "/" + file)
+
+for region in regions:
+    for split in splits:
+        for normal in normals:
+            folder = "full_data" if region == "full" else region
+            print("Working on: " + "../data/train_test_split_data/"+folder + "/" + region + "_" + split + "_" + normal + "_train.csv")
+            print("\tAnd: " + "../data/train_test_split_data/"+folder + "/" + region + "_" + split + "_" + normal + "_test.csv")
+
+            out_train_name_90 = f"{region}_{split}_{normal}_ICA_90_train.csv"
+            out_test_name_90 = f"{region}_{split}_{normal}_ICA_90_test.csv"
+            out_train_name_95 = f"{region}_{split}_{normal}_ICA_95_train.csv"
+            out_test_name_95 = f"{region}_{split}_{normal}_ICA_95_test.csv"
+
+            train_df = pd.read_csv("../data/train_test_split_data/"+folder + "/" + region + "_" + split + "_" + normal + "_train.csv")
+            test_df = pd.read_csv("../data/train_test_split_data/"+folder + "/" + region + "_" + split + "_" + normal + "_test.csv")
+            # Preserve TOD columns
+            train_TOD = train_df['TOD']
+            test_TOD = test_df['TOD']
+            # Drop TOD from dataframes pre reduction
+            train_df = train_df.drop(['TOD'], axis = 1)
+            test_df = test_df.drop(['TOD'], axis=1)
+
+            #Fit ICA
+            ica_test = FastICA(n_components=100, algorithm='parallel', whiten=True)
+            S_ica_test = ica_test.fit_transform(train_df)  # Get the independent components from training data
+            # Determine the number of components to use using the explained variance criterion
+            explained_variance = np.var(S_ica_test, axis=0)
+            explained_variance_ratio = explained_variance / np.sum(explained_variance)
+            n_components_95 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.95) + 1
+            n_components_90 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.90) + 1
+
+            # take the number of components for explaining 95, 90 % reconstruction variance
+            ica_95 = FastICA(n_components=n_components_95, algorithm='parallel', whiten=True)
+            ica_90 = FastICA(n_components=n_components_90, algorithm='parallel', whiten=True)
+            # Get the various independent components
+            S_ica_95_train = pd.DataFrame(ica_95.fit_transform(train_df))
+            S_ica_95_test = pd.DataFrame(ica_95.transform(test_df))
+            S_ica_90_train = pd.DataFrame(ica_90.fit_transform(train_df))
+            S_ica_90_test = pd.DataFrame(ica_90.transform(test_df))
+
+            # Append TOD back on
+            S_ica_95_train['TOD'] = train_TOD
+            S_ica_95_test['TOD'] = test_TOD
+            S_ica_90_train['TOD'] = train_TOD
+            S_ica_90_test['TOD'] = test_TOD
+
+            # write to csv files - MAKE SURE TO CHANGE DESTINATION IF NECESSARY
+            S_ica_95_train.to_csv("../data/reduced_data/"+out_train_name_90, index=False)
+            S_ica_95_test.to_csv("../data/reduced_data/"+out_test_name_90, index=False)
+            S_ica_90_train.to_csv("../data/reduced_data/"+out_train_name_95, index=False)
+            S_ica_90_test.to_csv("../data/reduced_data/"+out_test_name_95, index=False)
+
+
+
 """
-
 # For Option 2:____________________________________________________________
-file_names = []
-data_dict = {}
+
 regions = ["BA11", "BA47", "full"]
 splits = ["80", "70", "60"]
-TOD_dict = {}
+normals = ["log", "MM"]
 
-for file in os.listdir("../data/encoded"):
-        if fnmatch.fnmatch(file, '*.csv'):
-            name = re.match(".+(?=_(train)|_(test)\.csv)", file)
-            file_names.append(name.group())
-            data_dict[file] = pd.read_csv("../data/encoded" + "/" + file)
+for region in regions:
+    for split in splits:
+        for normal in normals:
+            out_train_name_90 = f"{region}_{split}_{normal}_ICA_90_train.csv"
+            out_test_name_90 = f"{region}_{split}_{normal}_ICA_90_test.csv"
+            out_train_name_95 = f"{region}_{split}_{normal}_ICA_95_train.csv"
+            out_test_name_95 = f"{region}_{split}_{normal}_ICA_95_test.csv"
 
-# For Option 3:____________________________________________________________
-file_names = []
-data_dict = {}
-regions = ["BA11", "BA47", "full"]
-splits = ["80", "70", "60"]
-TOD_dict = {}
+            train_df = pd.read_csv("../data/encoded/" + region + "_" + split + "_" + normal + "_train.csv")
+            test_df = pd.read_csv("../data/encoded/" + region + "_" + split + "_" + normal + "_test.csv")
+            # Preserve TOD columns
+            train_TOD = train_df['TOD']
+            test_TOD = test_df['TOD']
+            # Drop TOD from dataframes pre reduction
+            train_df = train_df.drop(['TOD'], axis = 1)
+            test_df = test_df.drop(['TOD'], axis=1)
 
-for file in os.listdir("../data/encoded"):
-        if fnmatch.fnmatch(file, '*.csv'):
-            name = re.match(".+(?=_(train)|_(test)\.csv)", file)
-            file_names.append(name.group())
-            data_dict[file] = pd.read_csv("../data/encoded" + "/" + file)
+            #Fit ICA
+            ica_test = FastICA(n_components=100, algorithm='parallel', whiten=True)
+            S_ica_test = ica_test.fit_transform(train_df)  # Get the independent components from training data
+            # Determine the number of components to use using the explained variance criterion
+            explained_variance = np.var(S_ica_test, axis=0)
+            explained_variance_ratio = explained_variance / np.sum(explained_variance)
+            n_components_95 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.95) + 1
+            n_components_90 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.90) + 1
+
+            # take the number of components for explaining 95, 90 % reconstruction variance
+            ica_95 = FastICA(n_components=n_components_95, algorithm='parallel', whiten=True)
+            ica_90 = FastICA(n_components=n_components_90, algorithm='parallel', whiten=True)
+            # Get the various independent components
+            S_ica_95_train = pd.DataFrame(ica_95.fit_transform(train_df))
+            S_ica_95_test = pd.DataFrame(ica_95.transform(test_df))
+            S_ica_90_train = pd.DataFrame(ica_90.fit_transform(train_df))
+            S_ica_90_test = pd.DataFrame(ica_90.transform(test_df))
+
+            # Append TOD back on
+            S_ica_95_train['TOD'] = train_TOD
+            S_ica_95_test['TOD'] = test_TOD
+            S_ica_90_train['TOD'] = train_TOD
+            S_ica_90_test['TOD'] = test_TOD
+
+            # write to csv files - MAKE SURE TO CHANGE DESTINATION IF NECESSARY
+            S_ica_95_train.to_csv("../data/reduced_encoded/"+out_train_name_90, index=False)
+            S_ica_95_test.to_csv("../data/reduced_encoded/"+out_test_name_90, index=False)
+            S_ica_90_train.to_csv("../data/reduced_encoded/"+out_train_name_95, index=False)
+            S_ica_90_test.to_csv("../data/reduced_encoded/"+out_test_name_95, index=False)
 
 
-
-file_names = list(set(file_names))
-
-"""#check TOD split lengths
-for tod in TOD_dict.keys():
-    print("Length of ", tod, ": ", len(TOD_dict[tod]))"""
-
-final_data_grouping = {}
-for key in data_dict.keys():
-    for name in file_names:
-        if name not in final_data_grouping.keys():
-            final_data_grouping[name] = {}
-        if name in key:
-            final_data_grouping[name][key] = data_dict[key]
-
-"""# Print groupings
-for data_group in final_data_grouping.keys():
-    print("Data group:", data_group)
-    for df in final_data_grouping[data_group].keys():
-        print("        " , df)
 """
-# Assuming final_data_grouping is already populated
-for data_group in list(final_data_grouping.keys()):
-    if "nonnormalized" in data_group:
-        continue
-    for dataset in final_data_grouping[data_group].keys():
-        print(final_data_grouping[data_group][dataset])
-        if "train" in dataset:
-            train_TOD = final_data_grouping[data_group][dataset]['TOD']
-            to_DR_train = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)
-            train_name = dataset
-        else:
-            test_TOD = final_data_grouping[data_group][dataset]['TOD']
-            to_DR_test = np.delete(final_data_grouping[data_group][dataset], 2, axis=1)
-            test_name = dataset
-    ica_test = FastICA(n_components=100, algorithm='parallel', whiten=True)
-    S_ica_test = ica_test.fit_transform(to_DR_train)  # Get the independent components from training data
-    # Determine the number of components to use using the explained variance criterion
-    explained_variance = np.var(S_ica_test, axis=0)
-    explained_variance_ratio = explained_variance / np.sum(explained_variance)
-    n_components_95 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.95) + 1
-    n_components_90 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.90) + 1
+"""
+# For Option 3:____________________________________________________________
+folders = ["w1_conv_dense/", "w2_conv_dense/", "w3_conv_dense/"]
+regions = ["BA11", "BA47"]
+splits = ["80", "70", "60"]
+normals = ["log", "MM"]
 
-    #take the number of components for explaining 95, 90 % reconstruction variance
-    ica_95 = FastICA(n_components=n_components_95, algorithm='parallel', whiten=True)
-    ica_90 = FastICA(n_components=n_components_90, algorithm='parallel', whiten=True)
-    # Get the various independent components
-    S_ica_95_train = pd.DataFrame(ica_95.fit_transform(to_DR_train))
-    S_ica_95_test = pd.DataFrame(ica_95.transform(to_DR_test))
-    S_ica_90_train = pd.DataFrame(ica_90.fit_transform(to_DR_train))
-    S_ica_90_test = pd.DataFrame(ica_90.transform(to_DR_test))
+for folder in folders:
+    for region in regions:
+        for split in splits:
+            for normal in normals:
+                window_string = {"w1" in folder: "window1", "w2" in folder: "window2", "w3" in folder: "window3"}.get(
+                    True, "ERROR")
+                out_train_name_90 = f"{region}_{split}_{normal}_{window_string}_ICA_90_train.csv"
+                out_test_name_90 = f"{region}_{split}_{normal}_{window_string}_ICA_90_test.csv"
+                out_train_name_95 = f"{region}_{split}_{normal}_{window_string}_ICA_95_train.csv"
+                out_test_name_95 = f"{region}_{split}_{normal}_{window_string}_ICA_95_test.csv"
 
-    # Append TOD back on
-    S_ica_95_train['TOD'] = train_TOD
-    S_ica_95_test['TOD'] = test_TOD
-    S_ica_90_train['TOD'] = train_TOD
-    S_ica_90_test['TOD'] = test_TOD
+                print("Working on: " + "../data/"+folder + region + "_" + split + "_" + normal + "_train.csv")
+                print("\tAnd: " + "../data/" + folder + region + "_" + split + "_" + normal + "_test.csv")
+                train_df = pd.read_csv("../data/"+folder + region + "_" + split + "_" + normal + "_train.csv")
+                test_df = pd.read_csv("../data/"+folder + region + "_" + split + "_" + normal + "_test.csv")
+                # Preserve TOD columns
+                train_TOD = train_df['TOD']
+                test_TOD = test_df['TOD']
+                # Drop TOD from dataframes pre reduction
+                train_df = train_df.drop(['TOD'], axis = 1)
+                test_df = test_df.drop(['TOD'], axis=1)
 
+                #Fit ICA
+                ica_test = FastICA(n_components=100, algorithm='parallel', whiten=True)
+                S_ica_test = ica_test.fit_transform(train_df)  # Get the independent components from training data
+                # Determine the number of components to use using the explained variance criterion
+                explained_variance = np.var(S_ica_test, axis=0)
+                explained_variance_ratio = explained_variance / np.sum(explained_variance)
+                n_components_95 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.95) + 1
+                n_components_90 = np.argmax(np.cumsum(explained_variance_ratio) >= 0.90) + 1
 
-    #write to csv files - MAKE SURE TO CHANGE DESTINATION IF NECESSARY
-    train_file_name_95 = "../data/reduced_CNN/" + re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_95_train.csv"
-    test_file_name_95 = "../data/reduced_CNN/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_95_test.csv"
-    train_file_name_90 = "../data/reduced_CNN/" +re.match(".+(?=_(train)|_(test)\.csv)", train_name).group() + "_ICA_90_train.csv"
-    test_file_name_90 = "../data/reduced_CNN/" +re.match(".+(?=_(train)|_(test)\.csv)", test_name).group() + "_ICA_90_test.csv"
+                # take the number of components for explaining 95, 90 % reconstruction variance
+                ica_95 = FastICA(n_components=n_components_95, algorithm='parallel', whiten=True)
+                ica_90 = FastICA(n_components=n_components_90, algorithm='parallel', whiten=True)
+                # Get the various independent components
+                S_ica_95_train = pd.DataFrame(ica_95.fit_transform(train_df))
+                S_ica_95_test = pd.DataFrame(ica_95.transform(test_df))
+                S_ica_90_train = pd.DataFrame(ica_90.fit_transform(train_df))
+                S_ica_90_test = pd.DataFrame(ica_90.transform(test_df))
 
-    print(train_file_name_95)
-    print(test_file_name_95)
-    print(train_file_name_90)
-    print(test_file_name_90)
+                # Append TOD back on
+                S_ica_95_train['TOD'] = train_TOD
+                S_ica_95_test['TOD'] = test_TOD
+                S_ica_90_train['TOD'] = train_TOD
+                S_ica_90_test['TOD'] = test_TOD
 
-    S_ica_95_train.to_csv(train_file_name_95, index=False)
-    S_ica_95_test.to_csv(test_file_name_95, index=False)
-    S_ica_90_train.to_csv(train_file_name_90, index=False)
-    S_ica_90_test.to_csv(test_file_name_90, index=False)
+                # write to csv files - MAKE SURE TO CHANGE DESTINATION IF NECESSARY
+                S_ica_95_train.to_csv("../data/reduced_CNN/"+out_train_name_90, index=False)
+                S_ica_95_test.to_csv("../data/reduced_CNN/"+out_test_name_90, index=False)
+                S_ica_90_train.to_csv("../data/reduced_CNN/"+out_train_name_95, index=False)
+                S_ica_90_test.to_csv("../data/reduced_CNN/"+out_test_name_95, index=False)
+"""

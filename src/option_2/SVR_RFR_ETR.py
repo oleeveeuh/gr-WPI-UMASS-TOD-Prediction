@@ -46,9 +46,9 @@ if __name__ == "__main__":
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
         DR_methods=[DR_Method.KPCA, DR_Method.ICA, DR_Method.PCA, DR_Method.Isomap],
         variances=[Variance.V90, Variance.V95],
-        windows = [WindowSize.W1] #, WindowSize.W2, WindowSize.W3]
+        windows = [WindowSize.W3] #, WindowSize.W2, WindowSize.W3]
     )
     
     results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_encoded_file,verbose=True, save_result=True, windows = True)
     print(results_df)
-    write_results_to_excel(results_df, target_folder='performance_sheets_option2/window1',verbose=True)
+    write_results_to_excel(results_df, target_folder='performance_sheets_option2/window3',verbose=True)

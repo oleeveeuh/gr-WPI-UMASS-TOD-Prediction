@@ -12,7 +12,6 @@ from sklearn.linear_model import SGDRegressor
 
 if __name__ == "__main__":
     # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
-
     # Define models
     models = {
         'XGBoost Regressor': XGBRegressor(objective='reg:squarederror', random_state=RANDOM_STATE),
@@ -63,7 +62,7 @@ if __name__ == "__main__":
         targets=[Target.BA11, Target.BA47, Target.full],
         splits=[Split.S60, Split.S70, Split.S80],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
-        DR_methods=[DR_Method.KPCA, DR_Method.ICA, DR_Method.PCA, DR_Method.Isomap],
+        DR_methods=[DR_Method.ICA],
         variances=[Variance.V90, Variance.V95]
     )
     

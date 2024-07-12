@@ -28,13 +28,15 @@ if __name__ == "__main__":
         targets=[Target.BA11, Target.BA47, Target.full],
         splits=[Split.S60, Split.S70, Split.S80],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
-        DR_methods=[DR_Method.KPCA, DR_Method.ICA, DR_Method.PCA, DR_Method.Isomap],
+        DR_methods=[DR_Method.ICA],
         variances=[Variance.V90, Variance.V95]
     )
+    for combo in combinations:
+        print(combo)
     
     results_df = train_test_model(models, param_grids, combinations, verbose=True, save_result=True)
     # results_df = pd.read_csv('D:\WPI\DirectedResearch\gr-WPI-UMASS-TOD-Project\data\program_output\model_results_20240625_201447.csv')
     print(results_df)
     # Convert DataFrame to list of dictionaries
-    # results_list = results_df.to_dict(orient='records')
+    results_list = results_df.to_dict(orient='records')
     write_results_to_excel(results_df, verbose=True)

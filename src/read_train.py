@@ -104,7 +104,7 @@ def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=No
     
     # Generate all combinations
     # if no dr and variance, only make combination of target, split and method
-    if DR_methods == None or variances == None or windows == None:
+    if DR_methods == None and variances == None and windows == None:
         all_combinations = product(effective_targets, effective_splits, effective_n_methods)
         return list(all_combinations)
     

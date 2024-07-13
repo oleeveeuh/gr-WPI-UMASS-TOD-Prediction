@@ -32,7 +32,7 @@ class MLPRegressor(nn.Module):
         x = self.first_layer(x)
         x = self.hidden_layers(x)
         x = self.output_layer(x)
-        return x
+        return x.squeeze(-1)
 
 if __name__ == "__main__":
     # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)

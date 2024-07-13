@@ -39,7 +39,7 @@ class LSTMRegressor(nn.Module):
         c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
         out, _ = self.lstm(x, (h0, c0))
         out = self.fc(out[:, -1, :])
-        return out
+        return out.squeeze(-1)
 
 if __name__ == "__main__":
     # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             module__hidden_size=50,
             module__num_layers=1,
             module__output_size=1,
-            max_epochs=20,
+            max_epochs=30,
             lr=0.01,
             iterator_train__shuffle=False,
             train_split=None,
@@ -77,7 +77,7 @@ if __name__ == "__main__":
         targets=[Target.BA11, Target.BA47, Target.full],
         splits=[Split.S60, Split.S70, Split.S80],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
-        DR_methods=[DR_Method.ICA],
+        DR_methods=[DR_Method.ICA, DR_Method.Isomap, DR_Method.KPCA, DR_Method.PCA],
         variances=[Variance.V90, Variance.V95]
     )
     

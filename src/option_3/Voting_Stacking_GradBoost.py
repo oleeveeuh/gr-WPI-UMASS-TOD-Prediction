@@ -53,17 +53,18 @@ if __name__ == "__main__":
         }
     }
 
-    # Specify which datasets to use
-    combinations = filter_combinations(
-        targets=[Target.BA11, Target.BA47],
-        splits=[Split.S60, Split.S70, Split.S80],
-        n_methods=[Normalize_Method.Log, Normalize_Method.MM],
-        DR_methods=[DR_Method.KPCA, DR_Method.ICA, DR_Method.PCA, DR_Method.Isomap],
-        variances=[Variance.V90, Variance.V95],
-        windows = [WindowSize.W2] #, WindowSize.W2, WindowSize.W3]
-    )
-    
-    results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_encoded_file,verbose=True, save_result=True, windows=True)
-    print(results_df)
-    #MAKE SURE TO CHANGE WINDOW SIZE!!!!!!!!!!!!!!
-    write_results_to_excel(results_df, target_folder='performance_sheets_option2/window2',verbose=True)
+    for window in sliding_window_sizes:
+        # Specify which datasets to use
+        combinations = filter_combinations(
+            targets=[Target.BA11, Target.BA47],
+            splits=[Split.S60, Split.S70, Split.S80],
+            n_methods=[Normalize_Method.Log, Normalize_Method.MM],
+            DR_methods=[DR_Method.KPCA, DR_Method.ICA, DR_Method.PCA, DR_Method.Isomap],
+            variances=[Variance.V90, Variance.V95],
+            windows = [window] #, WindowSize.W2, WindowSize.W3]
+        )
+        
+        results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_CNN_file,verbose=True, save_result=True, windows=True)
+        print(results_df)
+        #MAKE SURE TO CHANGE WINDOW SIZE!!!!!!!!!!!!!!
+        write_results_to_excel(results_df, target_folder=f'performance_sheets_option3/{window_size_map[window]}',verbose=True)

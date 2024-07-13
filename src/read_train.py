@@ -49,6 +49,7 @@ dr_method_map = {DR_Method.PCA: 'PCA', DR_Method.ICA: 'ICA', DR_Method.KPCA: 'KP
 variance_map = {Variance.V90: '90', Variance.V95: '95'}
 excel_method_to_file = {'Log':'log', 'MinMax':'MM'}
 window_size_map = { WindowSize.W1 : 'window1', WindowSize.W2 : 'window2', WindowSize.W3 : 'window3' }
+sliding_window_sizes = [WindowSize.W1, WindowSize.W2, WindowSize.W3]
 RANDOM_STATE = 42
 # get the path to data
 script_dir = os.path.dirname(__file__)

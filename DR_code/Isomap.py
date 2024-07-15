@@ -144,21 +144,24 @@ method_None = 'nonnormalized'
 window_size = 3
 
 reduce_CNN_folder = 'reduced_CNN'
+reduce_CNN_flatten_folder = 'reduced_CNN_flatten'
 reduce_encoded_folder = 'reduced_encoded'
 reduce_folder = 'reduced_data'
 encoded_folder = 'encoded'
 train_test_split = 'train_test_split_data'
-postfix = f'window{window_size}_'
-conv_dense = f'w{window_size}_conv_dense'
+
 
 folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM]
 
-for folder in folders:
-    for split in splits:
-        for method in methods:
-            process_and_save_data(data_dir, folder, split, method, output_folder = reduce_CNN_folder, input_folder = conv_dense, postfix_output=postfix)
+for i in range(1,4):
+    postfix = f'window{i}_'
+    conv_dense = f'flatten_w{i}_conv'
+    for folder in folders:
+        for split in splits:
+            for method in methods:
+                process_and_save_data(data_dir, folder, split, method, output_folder = reduce_CNN_flatten_folder, input_folder = conv_dense, postfix_output=postfix)
 # for split in splits:
 #     for method in methods:
 #         process_and_save_data(data_dir, folder_full, split, method)

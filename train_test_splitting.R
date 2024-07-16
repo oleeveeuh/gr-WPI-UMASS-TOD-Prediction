@@ -61,7 +61,7 @@ split_train_test <- function(data_list, train_percent, name) {
 }
 
 min_max_normalize <- function(data_list) {
-  for (col in 1:238) {
+  for (col in 1:length(data_list[[1]])) {
     min <- min(data_list[[1]][col])
     max <- max(data_list[[1]][col])
     data_list[[1]][col] <- (data_list[[1]][col] - min) / (max - min)
@@ -74,14 +74,17 @@ min_max_normalize <- function(data_list) {
 }
 
 log_normalize <- function(data_list) {
-  for (col in c(3:238)) {
+  log_column_id_start <- stringr::str_which(colnames(data_list[[1]]), "TOD")
+  for (col in c(log_column_id_start:length(data_list[[1]]))) {
     data_list[[1]][col] <- log(data_list[[1]][col])
     data_list[[2]][col] <- log(data_list[[2]][col])
   }
-  min <- min(data_list[[1]][1])
-  max <- max(data_list[[1]][1])
-  data_list[[1]][1] <- (data_list[[1]][1] - min )/ (max - min)
-  data_list[[2]][1] <- (data_list[[2]][1] - min )/ (max - min)
+  # Minmax normalize Age because the variation was too high with log
+  age_col_id <- stringr::str_which(colnames(data_list[[1]]), "Age")
+  min <- min(data_list[[1]][age_col_id])
+  max <- max(data_list[[1]][age_col_id])
+  data_list[[1]][age_col_id] <- (data_list[[1]][age_col_id] - min )/ (max - min)
+  data_list[[2]][age_col_id] <- (data_list[[2]][age_col_id] - min )/ (max - min)
   current_names <- names(data_list)
   names_front <- stringr::str_extract(current_names[[1]], "[BA1147full]{4,6}_\\d{2}_")
   names(data_list) <- c(paste0(names_front, "log_train"), paste0(names_front, "log_test"))

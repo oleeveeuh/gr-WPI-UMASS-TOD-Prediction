@@ -81,7 +81,7 @@ def create_windows(combination, w_size = 3, verbose = False):
         for i in range(w_size+1, len(df) - w_size+1): # For w=3, the range is row 4(inclusive) through the 3rd from end (exclusive)
             for col in df.columns:
                 if col in ['Age', 'TOD', 'Sex']:
-                    new_data[col].append(df.loc[i, col])
+                    new_data[col].append(df.loc[i-1, col])
                 else:
                     col_index = df.columns.get_loc(col)
                     # Collect values from the preceding and following W rows

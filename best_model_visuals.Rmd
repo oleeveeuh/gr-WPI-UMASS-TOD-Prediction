@@ -1,7 +1,7 @@
 ---
 title: "Best Models by Train Split, DN, DR, Variance Level"
 author: "Tillie Slosser"
-date: "2024-07-10"
+date: "`r format(Sys.time(), '%b %d, %y')`"
 output: html_document
 ---
 
@@ -16,10 +16,11 @@ library(tidyverse)
 # Read in Data
 opt1_results = read.csv("src/opt_1_all_models_performance.csv")[, -1] #First column is index right now, might change later
 opt2_results = read.csv("src/opt_2_all_models_performance.csv")[, -1]
+opt3_results = read.csv("src/opt_3_all_models_performance.csv")[, -1]
 ```
 
 ```{r}
-input_list <- list("Option 1 Best Models" = opt1_results, "Option 2 Best Models" = opt2_results)
+input_list <- list("Option 1 Best Models" = opt1_results, "Option 2 Best Models" = opt2_results, "Option 3 Best Models" = opt3_results)
 output_list <- list()
 
 error_metrics <- c("MSE", "MAE", "MAPE", "RMSE", "SMAPE")
@@ -28,13 +29,18 @@ o_name_id <- 1
 out_id <- 1
 for (df in input_list) {
   option_name <- names(input_list)[o_name_id]
+  #df <- df |> 
+    #filter(grepl('ICA', full_df_name))
+  #df <- df |> 
+    #filter(model != "Long Short-Term Memory Network") |> 
+    #filter(!grepl('KPCA', full_df_name))
   wrangled_df <- df |> 
-    mutate(data = str_extract(df$full_df_name, ".*(?= )")) |> 
+    mutate(data = str_extract(df$full_df_name, "(Full)|(BA11)|(BA47)")) |> 
     mutate(model = case_when(model == "Linear Regressor" ~ "Lin.", 
                              model == "Support Vector Regressor" ~ "SVR", 
                              model == "Decision Tree Regressor" ~ "Decision\nTree", 
                              model == "K-Neighbors Regressor" ~ "K-Neigh", 
-                             model == "Stochastic Gradient Descent Regressor" ~ "Stoch.\nGrad. Desc.", 
+                             model == "Stochastic Gradient Descent Regressor" ~ "Stoch.\nGrad.\nDesc.", 
                              model == "Voting Regressor" ~ "Voting", 
                              model == "Stacking Regressor" ~ "Stacking", 
                              model == "Gradient Boosting Regressor" ~ "Grad.\nBoost", 
@@ -47,37 +53,100 @@ for (df in input_list) {
                              model == "Long Short-Term Memory Network" ~ "LSTM", 
                              model == "Convolutional neural network" ~ "CNN")) |> 
     mutate(DR_method = str_extract(df$full_df_name, "(PCA|ICA|Isomap|KPCA)_\\d{2}")) |> 
-    mutate(norm_split = paste(str_extract(df$full_df_name, "(MinMax)|(Log)"), str_extract(df$full_df_name, "(?<=Overall_).*(?=:)"), sep = "_")) |> 
-    select(full_df_name, model, MSE:data, DR_method:norm_split)
+    mutate(norm_split = paste(str_extract(df$full_df_name, "(MinMax)|(Log)"), str_extract(df$full_df_name, "(?<=(\\d{2}|ll)_).*(?=:)"), sep = "_")) |> 
+    mutate(window = str_extract(df$full_df_name, "(?<=window)\\d(?=_)")) |> 
+    select(full_df_name, model, MSE:data, DR_method:norm_split, window)
   for (metric in error_metrics) {
     one_metric <- wrangled_df |> 
-      select(full_df_name, data, model, DR_method, norm_split, all_of(metric)) |> 
-      group_by(full_df_name) |> 
+      select(full_df_name, data, model, DR_method, norm_split, window, all_of(metric)) |> 
+      group_by(data, DR_method, norm_split) |> 
       arrange(.data[[metric]], .by_group = TRUE) |> 
-      distinct(full_df_name, .keep_all = TRUE)
+      distinct(data, DR_method, norm_split, .keep_all = TRUE) |> 
+      arrange(.data[[metric]])
     output_list[[out_id]] <- one_metric
     names(output_list)[out_id] <- paste(option_name, "by", metric)
     out_id <- out_id + 1
   }
   o_name_id <- o_name_id + 1
 }
+
+# complete_list <- list()
+# for (best_by in names(output_list)){
+#   for (metric in error_metrics) {
+#     if (metric %in% best_by) {
+#       
+#     }
+#   }
+# }
 ```
 
-```{r, fig.width = 12, fig.height = 6.1}
-for (df_id in 1:10) {
-  metric <- colnames(output_list[[df_id]])[6]
+```{r, fig.width = 12, fig.height = 6.1, eval = FALSE}
+# Original Graph
+for (df_id in 1:15) {
+  metric <- colnames(output_list[[df_id]])[7]
   plot <- ggplot(output_list[[df_id]], aes(x = norm_split, y = DR_method, fill = .data[[metric]])) +
-      geom_tile(color = "white") +
-      geom_text(aes(label = model), color = "white", size = 3.5, fontface = "bold") +
-      scale_fill_gradient(low = "blue", high = "red") +
-      facet_wrap(~data)+
+      #geom_tile(color = "white") +
+      geom_tile(aes(color = window, width=0.96, height=0.96), size = 0.8)+
+      #all text
+      geom_text(output_list[[df_id]][-c(1:5), ], mapping = aes(label = model), color = "white", size = 2.5) +
+      # minimum 5
+      geom_text(data = output_list[[df_id]][2:5,], aes(label = model), color = "white", size = 3.5, fontface = "bold") +
+      # lowest value
+      geom_text(data = output_list[[df_id]][1,], aes(label = model), color = "white", size = 3.8, fontface = "bold.italic") +
+      scale_fill_gradient(low = "blue", high = "red", trans = "log") +
+      facet_wrap(~data) +
       theme_minimal() +
       labs(title = names(output_list)[df_id]) + 
       theme(
         axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "right"
+        legend.position = "right", 
       )
   print(plot)
 }
 ```
 
+```{r, fig.width = 15, fig.height = 6.1}
+# Best in each BA italic/bold
+for (df_id in 1:15) {
+  extra_layer <- FALSE
+  current_df <- output_list[[df_id]]
+  metric <- colnames(current_df)[7]
+  best_overall <- current_df[1,]
+  best_overall$model <- paste0("*", best_overall$model, "*")
+  just_BA11 <- current_df[current_df$data == "BA11",]
+  just_BA47 <- current_df[current_df$data == "BA47",]
+  if ("Full" %in% current_df$data) {
+    just_full <- current_df[current_df$data == "Full",]
+    extra_layer <-  TRUE
+  }
+  plot <- ggplot(current_df, aes(x = norm_split, y = DR_method, fill = .data[[metric]])) +
+      #geom_tile(color = "white") +
+      geom_tile(aes(color = window, width=0.96, height=0.96), size = 0.8)+
+      #all text
+      geom_text(just_BA11[-c(1:5), ], mapping = aes(label = model), color = "white", size = 2.5) +
+      geom_text(just_BA47[-c(1:5), ], mapping = aes(label = model), color = "white", size = 2.5) +
+      # minimum 5
+      geom_text(data = just_BA11[2:5,], aes(label = model), color = "white", size = 3.5, fontface = "bold") +
+      geom_text(data = just_BA47[2:5,], aes(label = model), color = "white", size = 3.5, fontface = "bold") +
+    # lowest value
+      geom_text(data = just_BA11[1,], aes(label = model), color = "white", size = 3.8, fontface = "bold.italic") +
+      geom_text(data = just_BA47[1,], aes(label = model), color = "white", size = 3.8, fontface = "bold.italic") +
+    geom_text(data = best_overall, aes(label = model), color = "white", size = 3.8, fontface = "bold.italic") +
+      scale_fill_gradient(low = "blue", high = "red", trans = "log") +
+      facet_wrap(~data) 
+  if (extra_layer) {
+    plot <- plot +  list(
+        geom_text(just_full[-c(1:5), ], mapping = aes(label = model), color = "white", size = 2.5), 
+        geom_text(data = just_full[2:5,], aes(label = model), color = "white", size = 3.5, fontface = "bold"), 
+        geom_text(data = just_full[1,], aes(label = model), color = "white", size = 3.8, fontface = "bold.italic"))
+  }
+    plot <- plot +
+      theme_minimal() +
+      labs(title = names(output_list)[df_id]) + 
+      theme(
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right", 
+      )
+  print(plot)
+}
+```

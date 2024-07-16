@@ -128,3 +128,36 @@ class MLPRegressor(nn.Module):
         x = self.hidden_layers(x)
         x = self.output_layer(x)
         return x.squeeze(-1)
+
+
+class Autoencoder(nn.Module):
+    def __init__(self, original_dim, encoding_dim):
+        super(Autoencoder, self).__init__()
+        # Define the encoder
+        self.encoder = nn.Sequential(
+            nn.Flatten(),  # Flatten the input if it's not already 1D
+            nn.Linear(original_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 32),
+            nn.ReLU(),
+            nn.Linear(32, encoding_dim),
+            nn.Tanh(),  # Compresses into the specified encoding dimension
+        )
+        
+        # Define the decoder
+        self.decoder = nn.Sequential(
+            nn.Linear(encoding_dim, 32),
+            nn.ReLU(),
+            nn.Linear(32, 64),
+            nn.ReLU(),
+            nn.Linear(64, 128),
+            nn.ReLU(),
+            nn.Linear(128, original_dim),
+        )
+
+    def forward(self, x):
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded)
+        return decoded

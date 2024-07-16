@@ -6,6 +6,7 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 # Now you can import the module
 from read_train import *
+from model_definitions import Autoencoder, set_seeds
 import pandas as pd
 import numpy as np
 import os
@@ -15,7 +16,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 import ast
 
-WINDOW_SIZE = 3
 encoding_dim = 1
 batch_size = 16
 this_script = os.path.dirname(__file__)
@@ -29,37 +29,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 device = torch.device("cpu")
 print(f"Using device: {device}")
 
-class Autoencoder(nn.Module):
-    def __init__(self, original_dim, encoding_dim):
-        super(Autoencoder, self).__init__()
-        # Define the encoder
-        self.encoder = nn.Sequential(
-            nn.Flatten(),  # Flatten the input if it's not already 1D
-            nn.Linear(original_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 64),
-            nn.ReLU(),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, encoding_dim),
-            nn.Tanh(),  # Compresses into the specified encoding dimension
-        )
-        
-        # Define the decoder
-        self.decoder = nn.Sequential(
-            nn.Linear(encoding_dim, 32),
-            nn.ReLU(),
-            nn.Linear(32, 64),
-            nn.ReLU(),
-            nn.Linear(64, 128),
-            nn.ReLU(),
-            nn.Linear(128, original_dim),
-        )
-
-    def forward(self, x):
-        encoded = self.encoder(x)
-        decoded = self.decoder(encoded)
-        return decoded
+set_seeds(1673)
 
 def create_windows(combination, w_size = 3, verbose = False):
     # read in the relevant data
@@ -113,13 +83,13 @@ def reshape_and_save(encoded_output, original_meta_df, num_samples, num_genes, o
     print(f"Saved reshaped data to {output_file}")
 
 
-def apply_autoencoder(combinations, epochs = 10,verbose=False):
+def apply_autoencoder(combinations, window_size, epochs = 10,verbose=False):
     os.makedirs(encoded_path, exist_ok=True)
 
     for combination in combinations:
         target, split, n_method = combination
-        train_file = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{WINDOW_SIZE}_train.csv"
-        test_file = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{WINDOW_SIZE}_test.csv"
+        train_file = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{window_size}_train.csv"
+        test_file = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{window_size}_test.csv"
         if verbose:
             print(f"Processing: {train_file}")
         train_path = os.path.join(window_data_path, train_file)
@@ -176,6 +146,7 @@ def apply_autoencoder(combinations, epochs = 10,verbose=False):
         criterion = nn.MSELoss()
         optimizer = optim.Adam(autoencoder.parameters(), lr=0.001)
         train_loader = DataLoader(TensorDataset(train_tensor), batch_size=batch_size, shuffle=True)
+        test_loader = DataLoader(TensorDataset(test_tensor), batch_size=batch_size, shuffle=False)
 
         # Train the Autoencoder with tqdm for progress tracking
         autoencoder.train()
@@ -192,8 +163,18 @@ def apply_autoencoder(combinations, epochs = 10,verbose=False):
                     # Update tqdm bar showing current batch loss
                     tepoch.set_postfix(loss=loss.item())
 
-        # Encode the train and test data
+
         autoencoder.eval()
+        total_test_loss = 0
+        with torch.no_grad():
+            for data, in tqdm(test_loader, desc="Evaluating Test Set", unit="batch"):
+                data = data.to(device)
+                outputs = autoencoder(data)
+                loss = criterion(outputs, data)
+                total_test_loss += loss.item()
+
+        average_test_loss = total_test_loss / len(test_loader)
+        print(f"Average Test Set Loss: {average_test_loss}")
         with torch.no_grad():
             # Ensure train_tensor and test_tensor are on the GPU
             train_tensor = train_tensor.to(device)
@@ -215,15 +196,14 @@ def apply_autoencoder(combinations, epochs = 10,verbose=False):
 
 def create_windowed_files(combinations):
     os.makedirs(window_data_path, exist_ok=True)
-    
-    # Get all the possible method combinations
-    for combo in combinations:
-        windows = create_windows(combo, w_size=WINDOW_SIZE, verbose = True)
-        target, split, n_method = combo
-        for window in windows:
-            filename = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{WINDOW_SIZE}_{window}.csv"
-            path = os.path.join(window_data_path, filename)
-            windows[window].to_csv(path, index=False)
+    for window_size in range(1, 4):
+        for combo in combinations:
+            windows = create_windows(combo, w_size=window_size, verbose = True)
+            target, split, n_method = combo
+            for window in windows:
+                filename = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_window{window_size}_{window}.csv"
+                path = os.path.join(window_data_path, filename)
+                windows[window].to_csv(path, index=False)
 
 if __name__ == "__main__":
     combinations = filter_combinations(
@@ -232,4 +212,5 @@ if __name__ == "__main__":
         n_methods=[Normalize_Method.Log, Normalize_Method.MM]
     )
     create_windowed_files(combinations)
-    apply_autoencoder(combinations, epochs=30, verbose=True)
+    for window_size in range(1, 4): 
+        apply_autoencoder(combinations, window_size, epochs=30, verbose=True)

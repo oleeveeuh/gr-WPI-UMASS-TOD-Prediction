@@ -53,8 +53,8 @@ print(comparison_results)
 # Optionally, save to a CSV file
 # comparison_results.to_csv('intersection_values_comparison.csv', index=False)
 '''
-testfile = 'data/reduced_encoded/BA11_80_log_window3_ICA_95_test.csv'
-trainfile = 'data/reduced_encoded/BA11_80_log_window3_ICA_95_train.csv'
+testfile = 'data/reduced_encoded/BA11_80_log_window1_ICA_95_test.csv'
+trainfile = 'data/reduced_encoded/BA11_80_log_window1_ICA_95_train.csv'
 
 train_df = pd.read_csv(trainfile)
 test_df = pd.read_csv(testfile)

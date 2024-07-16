@@ -141,8 +141,6 @@ method_log = 'log'
 method_MM = 'MM'
 method_None = 'nonnormalized'
 
-window_size = 3
-
 reduce_CNN_folder = 'reduced_CNN'
 reduce_CNN_flatten_folder = 'reduced_CNN_flatten'
 reduce_encoded_folder = 'reduced_encoded'
@@ -161,7 +159,8 @@ for i in range(1,4):
     for folder in folders:
         for split in splits:
             for method in methods:
-                process_and_save_data(data_dir, folder, split, method, output_folder = reduce_CNN_flatten_folder, input_folder = conv_dense, postfix_output=postfix)
+                print(postfix)
+                process_and_save_data(data_dir, folder, split, method, output_folder = reduce_encoded_folder, input_folder = encoded_folder, postfix_output=postfix, postfix_input=postfix)
 # for split in splits:
 #     for method in methods:
 #         process_and_save_data(data_dir, folder_full, split, method)

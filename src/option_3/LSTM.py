@@ -6,40 +6,11 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 # Now you can import the module
 from read_train import *
-import torch
-import torch.nn as nn
+from model_definitions import LSTMRegressor, create_sequences, set_seeds
 import torch.optim as optim
 from skorch import NeuralNetRegressor
-from sklearn.ensemble import AdaBoostRegressor
-# Define the LSTM model
-seq_length = 3
-# Create sequences for X and adjust y accordingly
-def create_sequences(X, y):
-    X_seq = []
-    y_seq = []
-    for i in range(len(X) - seq_length):
-        X_seq.append(X[i:i + seq_length].astype(np.float32))
-        y_seq.append(y[i + seq_length].astype(np.float32))
-    return np.array(X_seq), np.array(y_seq)
 
-class LSTMRegressor(nn.Module):
-    def __init__(self, hidden_size, num_layers, output_size):
-        super(LSTMRegressor, self).__init__()
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.output_size = output_size
-        self.lstm = None  # Initialized later
-        self.fc = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        if self.lstm is None or self.lstm.input_size != x.size(2):
-            # Dynamically create the LSTM based on the current input size
-            self.lstm = nn.LSTM(x.size(2), self.hidden_size, self.num_layers, batch_first=True).to(x.device)
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(x.device)
-        out, _ = self.lstm(x, (h0, c0))
-        out = self.fc(out[:, -1, :])
-        return out.squeeze(-1)
+set_seeds(RANDOM_STATE)
 
 if __name__ == "__main__":
     # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
@@ -56,6 +27,7 @@ if __name__ == "__main__":
             lr=0.01,
             iterator_train__shuffle=False,
             train_split=None,
+            optimizer=optim.Adam,
             device='cuda'
             )
     }

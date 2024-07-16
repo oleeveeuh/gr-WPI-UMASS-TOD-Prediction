@@ -6,33 +6,12 @@ parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(parent_dir)
 # Now you can import the module
 from read_train import *
+from model_definitions import MLPRegressor, set_seeds
 import torch.nn as nn
+import torch.optim as optim
 from skorch import NeuralNetRegressor
 
-# Define the MLP model
-class MLPRegressor(nn.Module):
-    def __init__(self, num_units=10, output_size=1, activation_func=nn.ReLU()):
-        super(MLPRegressor, self).__init__()
-        self.num_units = num_units
-        self.output_size = output_size
-        self.first_layer = None  # This will be dynamically initialized
-        self.hidden_layers = nn.Sequential(
-            nn.Linear(num_units, num_units),
-            activation_func,
-            nn.Linear(num_units, num_units),
-            activation_func
-        )
-        self.output_layer = nn.Linear(num_units, output_size)
-
-    def forward(self, x):
-        if self.first_layer is None or self.first_layer.in_features != x.size(1):
-            # Dynamically create the first layer based on the current input size
-            self.first_layer = nn.Linear(x.size(1), self.num_units).to(x.device)
-        
-        x = self.first_layer(x)
-        x = self.hidden_layers(x)
-        x = self.output_layer(x)
-        return x.squeeze(-1)
+set_seeds(RANDOM_STATE)
 
 if __name__ == "__main__":
     # read_file(Target.BA11, Split.S60, Normalize_Method.Log, DR_Method.ICA, Variance.V90)
@@ -45,7 +24,8 @@ if __name__ == "__main__":
             max_epochs=20,  # You can adjust this
             lr=0.1,
             iterator_train__shuffle=False,
-            device = 'cuda'
+            optimizer=optim.Adam,
+            device = 'cuda',
             )
     }
 

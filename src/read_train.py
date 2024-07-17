@@ -60,7 +60,10 @@ encoded_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_encoded')
 encoded_data_dir = os.path.normpath(encoded_data_dir)
 
 CNN_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_CNN')
-CNN_data_dir = os.path.normpath(encoded_data_dir)
+CNN_data_dir = os.path.normpath(CNN_data_dir)
+
+CNN_flatten_data_dir = os.path.join(script_dir, '..', 'data', 'reduced_CNN_flatten')
+CNN_flatten_data_dir = os.path.normpath(CNN_flatten_data_dir)
 
 def filter_combinations(targets=None, splits=None, n_methods=None, DR_methods=None, variances=None, windows = None):
     """
@@ -223,7 +226,7 @@ def read_reduced_encoded_file(target, split, n_method, dr_method, variance, wind
     return X_train, y_train, X_test, y_test
 
 # read from CNN data folder
-def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_size):
+def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_size, flatten=False):
     '''
     Input:
         target_data(BA11, BA47, Combine)
@@ -239,8 +242,13 @@ def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_s
     train_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}_train.csv"
     test_name = f"{target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}_test.csv"
 
-    train_file = os.path.join(CNN_data_dir, train_name)
-    test_file = os.path.join(CNN_data_dir, test_name)
+
+    if flatten:
+        train_file = os.path.join(CNN_flatten_data_dir, train_name)
+        test_file = os.path.join(CNN_flatten_data_dir, test_name)
+    else:
+        train_file = os.path.join(CNN_data_dir, train_name)
+        test_file = os.path.join(CNN_data_dir, test_name)
     
     # Load data
     train_data = pd.read_csv(train_file)

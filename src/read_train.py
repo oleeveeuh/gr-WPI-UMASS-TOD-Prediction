@@ -286,12 +286,16 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
     for combination in combinations:
         
         # TODO: after change the data read function, change this place as well. should be taking a argument list
-        if windows:
+        if windows and flatten:
             target, split, n_method, dr_method, variance, window_size = combination
             X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance, window_size = window_size, flatten = flatten)
             if verbose:
                 print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
-        
+        elif windows:
+            target, split, n_method, dr_method, variance, window_size = combination
+            X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance, window_size = window_size)
+            if verbose:
+                print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         else: 
             target, split, n_method, dr_method, variance = combination
             X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance)
@@ -319,11 +323,17 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
             # Initialize RandomizedSearchCV
             tscv = TimeSeriesSplit(n_splits=cv)
             randomized_search = RandomizedSearchCV(model, param_distributions=param_grid, n_iter=n_iter, cv=tscv, random_state=random_state)
-            randomized_search.fit(X_train, y_train)
-            best_model = randomized_search.best_estimator_
+            try:
+                randomized_search.fit(X_train, y_train)
+                best_model = randomized_search.best_estimator_
+                # Predict on test set
+                y_pred = best_model.predict(X_test)
+            except ValueError as e:
+                print(f"Fit Failed, should only happen with CNN")
+                continue
             
-            # Predict on test set
-            y_pred = best_model.predict(X_test)
+            
+            
             
             # Calculate evaluation metrics
             mse = mean_squared_error(y_test, y_pred)

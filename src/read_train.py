@@ -226,7 +226,7 @@ def read_reduced_encoded_file(target, split, n_method, dr_method, variance, wind
     return X_train, y_train, X_test, y_test
 
 # read from CNN data folder
-def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_size, flatten=False):
+def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_size, flatten):
     '''
     Input:
         target_data(BA11, BA47, Combine)
@@ -264,7 +264,7 @@ def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_s
 
 
 
-def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file, data_process_function = None, windows = False):
+def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_state=42, verbose = False, save_result = False, use_numpy = False, data_read_function = read_reduced_file, data_process_function = None, windows = False, flatten=False):
     '''
     train_test_model
     Input:
@@ -288,7 +288,7 @@ def train_test_model(models, param_grids, combinations, n_iter=10, cv=5, random_
         # TODO: after change the data read function, change this place as well. should be taking a argument list
         if windows:
             target, split, n_method, dr_method, variance, window_size = combination
-            X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance, window_size = window_size)
+            X_train, y_train, X_test, y_test = data_read_function(target=target, n_method=n_method, split=split, dr_method=dr_method, variance=variance, window_size = window_size, flatten = flatten)
             if verbose:
                 print(f"Processing: {target_map[target]}_{split_map[split]}_{n_method_map[n_method]}_{window_size_map[window_size]}_{dr_method_map[dr_method]}_{variance_map[variance]}")
         

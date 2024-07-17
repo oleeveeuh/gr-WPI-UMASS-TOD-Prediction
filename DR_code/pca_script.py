@@ -45,7 +45,6 @@ def reduce_and_save(input_train_csv, output_train_csv, input_test_csv, output_te
     pca = PCA(n_components=num_dim)
     reduced_x_train = pca.fit_transform(x_train)
     reduced_x_test = pca.transform(x_test)  
-
     
     # Convert to dataframes
     reduced_x_train_df = pd.DataFrame(reduced_x_train, columns=[f'PC{i + 1}' for i in range(num_dim)])
@@ -85,7 +84,7 @@ method_log = 'log'
 method_MM = 'MM'
 method_None = 'nonnormalized'
 
-folders = [folder_BA11, folder_BA47, folder_full]
+folders = [folder_BA11, folder_BA47]
 splits = [split_60, split_70, split_80]
 methods = [method_log, method_MM]
 variance = [0.9, 0.95]
@@ -97,32 +96,18 @@ for var in variance:
     postfix_num = int(var * 100)
     for split in splits:
         for method in methods:
-            for window in windows:
-                # Construct the file paths for train
-                
+            for folder in folders:
+                for window in windows:
+                    # Construct the file paths for train
+                    train_file = f"{folder}_{split}_{method}_{window}_train.csv" # train file name
+                    train_path = os.path.join(data_dir, train_file) # train file path
+                    output_train_file = f'{folder}_{split}_{method}_{window}_PCA_{postfix_num}_train.csv' # reduced train file name
+                    output_train_path = os.path.join(reduced_data_dir, output_train_file) # where reduced train file will go
 
-                train_file = f"BA47_{split}_{method}_{window}_train.csv" # train file name
+                    # file path for test
+                    test_file = f"{folder}_{split}_{method}_{window}_test.csv"
+                    test_path = os.path.join(data_dir, test_file)
+                    output_test_file = f'{folder}_{split}_{method}_{window}_PCA_{postfix_num}_test.csv'
+                    output_test_path = os.path.join(reduced_data_dir, output_test_file)
 
-               
-                train_path = os.path.join(data_dir, train_file) # train file path
-
-                
-                output_train_file = f'BA47_{split}_{method}_{window}_PCA_{postfix_num}_train.csv' # reduced train file name
-
-                
-                output_train_path = os.path.join(reduced_data_dir, output_train_file) # where reduced train file will go
-
-                # file path for test
-                
-                test_file = f"BA47_{split}_{method}_{window}_test.csv"
-
-                
-                test_path = os.path.join(data_dir, test_file)
-
-                
-                output_test_file = f'BA47_{split}_{method}_{window}_PCA_{postfix_num}_test.csv'
-
-                
-                output_test_path = os.path.join(reduced_data_dir, output_test_file)
-
-                reduce_and_save(input_train_csv=train_path, output_train_csv=output_train_path, input_test_csv=test_path, output_test_csv=output_test_path, target_variance=var)
+                    reduce_and_save(input_train_csv=train_path, output_train_csv=output_train_path, input_test_csv=test_path, output_test_csv=output_test_path, target_variance=var)

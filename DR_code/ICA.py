@@ -241,3 +241,5 @@ def option3_5():
                     S_ica_90_train.to_csv("../data/reduced_CNN_flatten/"+out_train_name_95, index=False)
                     S_ica_90_test.to_csv("../data/reduced_CNN_flatten/"+out_test_name_95, index=False)
 
+if __name__ == "__main__":
+    option2()

@@ -70,7 +70,7 @@ if __name__ == "__main__":
         )
 
         #set flatten to True for CNN w/o dense
-        results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_CNN_file,verbose=True, save_result=True, windows=True, flatten=False)
+        results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_CNN_file,verbose=True, save_result=True, windows=True, flatten=True)
         print(results_df)
-        write_results_to_excel(results_df, target_folder=f'performance_sheets_option3/{window_size_map[window]}',verbose=True)
-        # write_results_to_excel(results_df, target_folder=f'performance_sheets_option3_flatten/{window_size_map[window]}',verbose=True)
+        # write_results_to_excel(results_df, target_folder=f'performance_sheets_option3/{window_size_map[window]}',verbose=True)
+        write_results_to_excel(results_df, target_folder=f'performance_sheets_option3_flatten/{window_size_map[window]}',verbose=True)

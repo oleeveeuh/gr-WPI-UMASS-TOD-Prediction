@@ -14,6 +14,8 @@ saved_output_dir = 'data\program_output\*.csv'
 # List all CSV files in the folder
 csv_files = glob.glob(saved_output_dir)
 
+
+print(csv_files)
 # Load each CSV file into a DataFrame and store them in a list
 dataframes = [pd.read_csv(file) for file in csv_files]
 windowSize = 0

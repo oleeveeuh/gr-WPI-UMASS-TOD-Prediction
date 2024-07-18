@@ -54,7 +54,8 @@ if __name__ == "__main__":
             variances=[Variance.V90, Variance.V95],
             windows = [window] #, WindowSize.W2, WindowSize.W3]
         )
-    
-        results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_CNN_file,verbose=True, save_result=True, use_numpy= True, data_process_function=create_sequences, windows=True)
+        #set flatten to True for CNN w/o dense
+        results_df = train_test_model(models, param_grids, combinations, data_read_function=read_reduced_CNN_file,verbose=True, save_result=True, use_numpy= True, data_process_function=create_sequences, windows=True, flatten=False)
         print(results_df)
         write_results_to_excel(results_df, target_folder=f'performance_sheets_option3/{window_size_map[window]}',verbose=True)
+        # write_results_to_excel(results_df, target_folder=f'performance_sheets_option3_flatten/{window_size_map[window]}',verbose=True)

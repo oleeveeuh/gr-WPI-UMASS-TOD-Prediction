@@ -62,7 +62,7 @@ if __name__ == "__main__":
         targets=[Target.BA11, Target.BA47, Target.full],
         splits=[Split.S60, Split.S70, Split.S80],
         n_methods=[Normalize_Method.Log, Normalize_Method.MM],
-        DR_methods=[DR_Method.ICA],
+        DR_methods=[DR_Method.KPCA],
         variances=[Variance.V90, Variance.V95]
     )
     

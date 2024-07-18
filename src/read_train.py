@@ -226,7 +226,7 @@ def read_reduced_encoded_file(target, split, n_method, dr_method, variance, wind
     return X_train, y_train, X_test, y_test
 
 # read from CNN data folder
-def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_size, flatten):
+def read_reduced_CNN_file(target, split, n_method, dr_method, variance, window_size, flatten=False):
     '''
     Input:
         target_data(BA11, BA47, Combine)

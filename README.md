@@ -1,7 +1,7 @@
 # No Time (To Die): Machine Learning for Predicting Time of Death from Gene Expression
-![Poster](poster.png)
+![Poster](poster.pdf)
 
-
+**File size is too big to render on GitHub. Click on the hyperlink to view the poster in the repository.
 
 ## Overview
 

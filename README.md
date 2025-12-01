@@ -3,6 +3,10 @@
 
 **File size is too big to render on GitHub. Click on the hyperlink to view the poster in the repository.
 
+## Paper Abstract
+*Gene expression (GE) levels depend heavily on the circadian clock, but the lack of sample time, typically "Time of Death" (TOD), in genomic datasets impedes analysis of this property. Without timestamps, each measurement acts as an arbitrary point and interpretation of time-expression relationships is impossible. This pilot research works to address this problem through the use of supervised machine learning (ML) methods to predict the TOD of GE levels. Our contributions are four-fold: (1) propose the development of a data-driven ML model pipeline with psychiatric domain expert guidance to perform TOD predictions; (2) develop a two-stage dimension reduction approach that combats the curse of dimensionality by reducing each GE pattern over a sequential time period into a single-value dimensional latent (SDL) representation using an AutoEncoder then reducing the number of SDL representations into a significantly lower dimensional space; (3) develop a process to select the best ML regression model that performs hyperparameter-tuning and training using randomized search and K-fold cross validation; and (4) conduct a comprehensive experimental study and analysis on our existing study data of 235 circadian GE levels from 146 subjects in the brain regions BA11 and BA47. In this pilot study, we demonstrate that our approach consistently outperforms the baseline methods to predict TOD in terms of Mean Absolute Error and Standard Deviation of Error. More importantly, our best-performing models consistently demonstrate biologically significant accuracy over different Brodmann areas. In future experiments, if our results can be generalized to other tissues, they could posit significant insights in healthcare for disease diagnosis, treatment optimization, and understanding of bodily states throughout the day.*
+
+
 ## Overview
 
 This repository contains a comprehensive machine learning pipeline for predicting Time of Death (TOD) from circadian gene expression patterns. Gene expression levels show strong circadian (24-hour) rhythms, but many genomic datasets lack crucial timestamp information. This project addresses this gap by developing supervised ML methods to infer TOD from gene expression data alone.
@@ -198,7 +202,7 @@ Chen, C. Y., Logan, R. W., Ma, T., Lewis, D. A., Tseng, G. C., Sibille, E., ... 
 
 Xue, X., Zong, W., Glausier, J. R., Kim, S. M., Shelton, M. A., Phan, B. N., ... & Pantazatos, S. P. (2022). Molecular rhythm alterations in prefrontal cortex and nucleus accumbens associated with opioid use disorder. *Translational Psychiatry*, 12(1), 1-13. https://doi.org/10.1038/s41398-022-01845-y
 
-
+A full Works Cited page will be available with the full paper.
 
 ## Contact & Questions
 

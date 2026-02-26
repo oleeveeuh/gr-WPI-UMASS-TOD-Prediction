@@ -1,11 +1,17 @@
 # No Time (To Die): Machine Learning for Predicting Time of Death from Gene Expression
+
+[Paper Preprint (BIOINFORMATICS 2026)](https://raw.githubusercontent.com/oleeveeuh/gr-WPI-UMASS-TOD-Prediction/main/BIOINFORMATICS_2026_398_CR.pdf)
 ![Poster](poster.pdf)
 
 **File size is too big to render on GitHub. Click on the hyperlink to view the poster in the repository.
 
-## Paper Abstract
-*Gene expression (GE) levels depend heavily on the circadian clock, but the lack of sample time, typically "Time of Death" (TOD), in genomic datasets impedes analysis of this property. Without timestamps, each measurement acts as an arbitrary point and interpretation of time-expression relationships is impossible. This pilot research works to address this problem through the use of supervised machine learning (ML) methods to predict the TOD of GE levels. Our contributions are four-fold: (1) propose the development of a data-driven ML model pipeline with psychiatric domain expert guidance to perform TOD predictions; (2) develop a two-stage dimension reduction approach that combats the curse of dimensionality by reducing each GE pattern over a sequential time period into a single-value dimensional latent (SDL) representation using an AutoEncoder then reducing the number of SDL representations into a significantly lower dimensional space; (3) develop a process to select the best ML regression model that performs hyperparameter-tuning and training using randomized search and K-fold cross validation; and (4) conduct a comprehensive experimental study and analysis on our existing study data of 235 circadian GE levels from 146 subjects in the brain regions BA11 and BA47. In this pilot study, we demonstrate that our approach consistently outperforms the baseline methods to predict TOD in terms of Mean Absolute Error and Standard Deviation of Error. More importantly, our best-performing models consistently demonstrate biologically significant accuracy over different Brodmann areas. In future experiments, if our results can be generalized to other tissues, they could posit significant insights in healthcare for disease diagnosis, treatment optimization, and understanding of bodily states throughout the day.*
+## Keywords:
+Transcriptomics, Gene Expression, Circadian Rhythms, Machine Learning, AutoEncoder, Dimensionality Reduction, Model Optimization.
+## Abstract:	
+In this work, we introduce a machine learning (ML) pipeline that predicts the time of death (TOD) of a subject from gene expression (GE) profiles, addressing a critical gap in genomic research where TOD data are scarce. Our contributions are fourfold: (1) a data-driven, clinically domain-guided pipeline that learns temporal GE patterns for TOD prediction; (2) a two-stage dimensionality reduction approach combining (I) AutoEncoders and (II) ISOMAP for BA11 & PCA for BA47, preserving the temporal sequence of the data while incorporating domain knowledge and obviating exhaustive searches for optimal circadian gene sequences; (3) systematic training and hyperparameter tuning of 16 ML regressors-including five single, eight ensemble, and three deep learning models-to identify the most effective ML model (i.e., ExtraTrees Regressor for BA11 and AdaBoost Regressor for BA47); and (4) a comprehensive evaluation on 146 subjects, examining 235 circadian gene’s expression patterns per subject across five performance metrics. Our method surpasses both non-temporal-encoding-based and temporal-encoding-based models, achieving hourly scaled MAEs of 0.839 (BA11) and 1.227 (BA47), with corresponding MSE and RMSE values of 1.013/1.006 and 2.153/1.467, respectively. Consequently, TOD predictions fall within a one hour error margin for BA11 and a two hour margin for BA47.
 
+## Paper Topics:	
+AI and Deep Learning: Algorithms, Tools, and Applications in Bioinformatics and Biomedicine; Machine Learning, Computational Intelligence, and AI in Bioinformatics ; Machine Learning Algorithms, Data Mining Techniques and Deep Learning Tools; Transcriptomics; Computational Neuroscience
 
 ## Overview
 
@@ -212,5 +218,5 @@ This work is pending publication (to be published March 2026). For questions or 
 
 **Citation:**
 ```bibtex
-tba
+Liau, O.; Slosser, T.; Betancourt, I.; Liu, Q.; Ngan, C.-K.; Fu, C.; Logan, R. W. and Oruganty, N. P. S. (2026). Using Machine Learning Approaches for Predicting Time of Death of Human Postmortem Samples Based on Transcriptomic Data.      
 ```

@@ -1,222 +1,186 @@
-# No Time (To Die): Machine Learning for Predicting Time of Death from Gene Expression
+# No Time (To Die): Predicting Time of Death from Gene Expression
 
-[Paper Preprint (BIOINFORMATICS 2026)](https://raw.githubusercontent.com/oleeveeuh/gr-WPI-UMASS-TOD-Prediction/main/BIOINFORMATICS_2026_398_CR.pdf)
-![Poster](poster.pdf)
+[![CI](https://github.com/oleeveeuh/gr-WPI-UMASS-TOD-Prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/oleeveeuh/gr-WPI-UMASS-TOD-Prediction/actions/workflows/ci.yml)
 
-**File size is too big to render on GitHub. Click on the hyperlink to view the poster in the repository.
+**Published:** *Using Machine Learning Approaches for Predicting Time of Death of Human Postmortem Samples Based on Transcriptomic Data*, BIOINFORMATICS 2026 (BIOSTEC Vol. 2), pages 704–715 · [DOI 10.5220/0014636000004070](https://doi.org/10.5220/0014636000004070) · [Publisher page](https://www.scitepress.org/Papers/2026/146360/) · [PDF in this repo](results/publication/BIOINFORMATICS_2026_398_CR.pdf)
 
-## Keywords:
-Transcriptomics, Gene Expression, Circadian Rhythms, Machine Learning, AutoEncoder, Dimensionality Reduction, Model Optimization.
-## Abstract:	
-In this work, we introduce a machine learning (ML) pipeline that predicts the time of death (TOD) of a subject from gene expression (GE) profiles, addressing a critical gap in genomic research where TOD data are scarce. Our contributions are fourfold: (1) a data-driven, clinically domain-guided pipeline that learns temporal GE patterns for TOD prediction; (2) a two-stage dimensionality reduction approach combining (I) AutoEncoders and (II) ISOMAP for BA11 & PCA for BA47, preserving the temporal sequence of the data while incorporating domain knowledge and obviating exhaustive searches for optimal circadian gene sequences; (3) systematic training and hyperparameter tuning of 16 ML regressors-including five single, eight ensemble, and three deep learning models-to identify the most effective ML model (i.e., ExtraTrees Regressor for BA11 and AdaBoost Regressor for BA47); and (4) a comprehensive evaluation on 146 subjects, examining 235 circadian gene’s expression patterns per subject across five performance metrics. Our method surpasses both non-temporal-encoding-based and temporal-encoding-based models, achieving hourly scaled MAEs of 0.839 (BA11) and 1.227 (BA47), with corresponding MSE and RMSE values of 1.013/1.006 and 2.153/1.467, respectively. Consequently, TOD predictions fall within a one hour error margin for BA11 and a two hour margin for BA47.
+|  |  |
+|---|---|
+| **What** | A machine-learning study asking whether **time of death (TOD)** can be predicted from **circadian gene expression** in postmortem human brain — plus a honest 2026 re-audit of its validation. |
+| **Data** | 146 human donors (GEO [GSE71620](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71620)); two prefrontal-cortex regions (BA11, BA47); 235 circadian genes per sample. |
+| **Headline (paper)** | Hourly-scale MAE **0.839 h** (BA11) and **1.227 h** (BA47) — see caveats below before interpreting. |
+| **Status** | Academic research prototype. **Not clinically usable, externally validated, or production-ready.** The 2026 audit in [docs/LIMITATIONS.md](docs/LIMITATIONS.md) found validation leakage in the published pipeline; a leakage-free re-analysis is included in this repo and scores far worse. |
 
-## Paper Topics:	
-AI and Deep Learning: Algorithms, Tools, and Applications in Bioinformatics and Biomedicine; Machine Learning, Computational Intelligence, and AI in Bioinformatics ; Machine Learning Algorithms, Data Mining Techniques and Deep Learning Tools; Transcriptomics; Computational Neuroscience
-
-## Overview
-
-This repository contains a comprehensive machine learning pipeline for predicting Time of Death (TOD) from circadian gene expression patterns. Gene expression levels show strong circadian (24-hour) rhythms, but many genomic datasets lack crucial timestamp information. This project addresses this gap by developing supervised ML methods to infer TOD from gene expression data alone.
-
-**Key Innovation:** A novel two-stage dimension reduction approach using AutoEncoders to encode sequentiality in time-series gene expression data, consistently outperforming baseline methods.
-
-## Motivation & Problem Statement
-
-### The Problem
-- Gene expression datasets often lack sample time (Time of Death / TOD) information
-- Circadian genes exhibit sinusoidal expression patterns that depend on time of day
-- Without timestamps, each measurement becomes an arbitrary point—temporal relationships cannot be analyzed
-- Current methods ignore the sequential nature of gene expression across time periods
-
-### The Solution
-We propose a machine learning pipeline that:
-1. Encodes temporal sequentiality in gene expression through AutoEncoders
-2. Performs two-stage dimension reduction (SDL → PCA/other methods)
-3. Trains and optimizes 16 regression models (5 single, 8 ensemble, 3 deep learning)
-4. Achieves biologically significant TOD prediction accuracy
-
-
-## Key Insights
-
-### Why Sequentiality Matters for Circadian Genes
-
-Circadian genes follow sinusoidal patterns. A single expression value (e.g., 8.1) could occur at two different times of day—once on the ascending slope and once on the descending slope. By encoding windows of consecutive values [N-1, N, N+1], the model captures the trajectory and can disambiguate which point in the cycle the current measurement represents.
-
-### Why AutoEncoders?
-
-1. **Interpretability:** Learned latent representations can be analyzed and understood
-2. **Efficiency:** Simpler architecture than CNNs for this task
-3. **Performance:** Consistently outperforms CNN baselines
-4. **Flexibility:** Sliding window approach naturally encodes temporal context
-
-
-## Dataset
-
-### Source
-[Chen et al. 2016](https://doi.org/10.1073/pnas.1515150113) - A study examining circadian patterns of gene expression in younger vs. older adults
-
-### Sample Characteristics
-- **Subjects:** 146 patients
-- **Mean Age:** 50.7 years
-- **Gender:** 75% male
-- **Ethnicity:** 85% Caucasian
-- **Brain Regions:** BA11 (Brodmann Area 11) and BA47 (Brodmann Area 47)
-- **Total Samples:** 292 (146 patients × 2 brain areas)
-- **Gene Features:** 20,000 original genes → 235 circadian genes (after feature selection)
-- **Gene Expression:** 235 columns of circadian gene expression levels
-
-### Data Format
-Each observation includes:
-- Time of Death (TOD) - *target variable*
-- Age
-- Sex (1 = Male, 0 = Female)
-- Brain Area (BA11 or BA47)
-- Gene Expression Values (235 circadian genes)
-
-## Methodology
-
-### 1. Data Preprocessing Pipeline
-
-#### Step 1: Divide Data
-- Separate datasets per brain area (BA11 and BA47)
-- Process independently to account for regional differences
-
-#### Step 2: Train/Test Split
-- Test 3 different split ratios (stratified by TOD bins)
-- Use binning strategy to ensure temporal distribution
-
-#### Step 3: Normalize Data
-- Test 2 normalization techniques
-- Standardize gene expression values
-
-#### Step 4: Dimension Reduction
-
-**Stage 1: Sequentiality Encoding via AutoEncoders**
-- Creates sliding windows of gene expression values
-- Tests 3 window sizes (e.g., [N-1, N, N+1] for window size = 1)
-- Each window is compressed to a single Encoded Value (EV)
-- Encodes temporal context: previous, current, and next expression values
-
-**Stage 2: Dimensionality Reduction**
-- Tests 4 reduction methods (e.g., PCA, etc.)
-- Reduces high-dimensional encoded features to lower-dimensional space
-- Combats curse of dimensionality
-
-### 2. AutoEncoder Architecture
-
-```
-Input Layer (sequence of gene values)
-    ↓
-Encoder (compresses window → single latent value)
-    ↓
-Encoded Value (single-value dimensional latent representation)
-    ↓
-Decoder (reconstructs original values for evaluation)
-    ↓
-Output Layer (reconstructed window)
-```
-
-**Key Features:**
-- Learns non-linear temporal patterns
-- More interpretable than CNNs
-- Typically more computationally efficient than CNN alternatives
-- Encodes sequentiality before training main models
-
-### 3. Model Training & Selection
-
-#### Regressors Tested (16 total)
-- **Single Models (5):** [Specify your single models]
-- **Ensemble Methods (8):** [Specify your ensemble methods]
-- **Deep Learning (3):** [Specify your deep learning models]
-
-#### Hyperparameter Optimization
-- Randomized search for hyperparameter tuning
-- K-fold cross-validation
-- Grid/random search as appropriate per model
-
-## Results
-
-### Performance Metrics
-
-All results reported as Mean Absolute Error (MAE) and Standard Deviation of Error (StdDev) in hours.
-
-#### Baseline 1: No Encoded Sequentiality
-```
-BA11 - MAE: 2.424 hours, StdDev: 3.077 hours
-BA47 - MAE: 3.274 hours, StdDev: 3.823 hours
-```
-
-#### Baseline 2: CNN to Encode Sequentiality
-```
-BA11 - MAE: 0.945 hours, StdDev: 1.107 hours
-BA47 - MAE: 1.757 hours, StdDev: 2.201 hours
-```
-
-#### Our Method: AutoEncoder to Encode Sequentiality
-```
-BA11 - MAE: 0.839 hours, StdDev: 0.996 hours
-BA47 - MAE: 1.227 hours, StdDev: 1.451 hours
-```
-
-### Key Findings
-
-1. **Sequentiality Matters:** Including sequential information in preprocessing greatly improves model performance (~3 hours → ~0.8-1.2 hours error reduction)
-
-2. **AutoEncoders > CNNs:**
-   - Better performance metrics
-   - More interpretable/explainable
-   - Typically less computationally expensive
-   - Cleaner architectural design for this task
-
-3. **Biological Significance:** Prediction errors within 1-2 hours represent meaningful improvements for understanding circadian gene expression patterns
-
-4. **Regional Consistency:** Both brain areas show consistent improvement patterns, suggesting method generalizability
-
-## Conclusions & Future Work
-
-### Conclusions
-- Including sequentiality in input data design greatly improves model performance
-- AutoEncoders perform better than CNNs, are more explainable, and typically less computationally expensive
-- Our approach demonstrates biologically significant accuracy improvements
-
-### Future Directions
-- Explore larger window sizes for encoding temporal dependencies
-- Thoroughly evaluate performance time across methods
-- Generate gene expression profiles for out-of-sample timestamping
-- Test generalization to other tissues beyond brain tissue
-- Validate on additional circadian gene expression datasets
-- Investigate disease-specific TOD prediction models
-
-## Project Team
-
-### Authors
-- **Tillie Slosser** (Smith College)
-- **Olivia Liau** (University of Southern California)
-- **Ivan Betancourt** (Amherst College)
-
-### Mentors/Advisors
-- **Qiaochu Liu** (Worcester Polytechnic Institute)
-- **Deep Suchak** (Worcester Polytechnic Institute)
-- **Dr. Chun-Kit Ngan** (Worcester Polytechnic Institute)
-- **Dr. Chen Fu** (UMass Chan Medical School)
-
-### Funding
-This research was supported by NSF REU Site Grant: 2349370 - *Applied Artificial Intelligence for Advanced Applications (2024-2026)*
-
-## References
-
-Chen, C. Y., Logan, R. W., Ma, T., Lewis, D. A., Tseng, G. C., Sibille, E., ... & Turek, F. W. (2016). Effects of aging on circadian patterns of gene expression in the human prefrontal cortex. *Proceedings of the National Academy of Sciences*, 113(1), 206-211. https://doi.org/10.1073/pnas.1515150113
-
-Xue, X., Zong, W., Glausier, J. R., Kim, S. M., Shelton, M. A., Phan, B. N., ... & Pantazatos, S. P. (2022). Molecular rhythm alterations in prefrontal cortex and nucleus accumbens associated with opioid use disorder. *Translational Psychiatry*, 12(1), 1-13. https://doi.org/10.1038/s41398-022-01845-y
-
-A full Works Cited page will be available with the full paper.
-
-## Contact & Questions
-
-This work is pending publication (to be published March 2026). For questions or inquiries about this research, please contact one of the authors.
+<details>
+<summary><strong>Poster</strong> (click for preview; full PDF linked)</summary>
+<a href="results/publication/poster.pdf"><img src="docs/poster_preview.png" alt="WPI REU poster: No Time (To Die)" width="720"></a>
+</details>
 
 ---
 
-**Citation:**
-```bibtex
-Liau, O.; Slosser, T.; Betancourt, I.; Liu, Q.; Ngan, C.-K.; Fu, C.; Logan, R. W. and Oruganty, N. P. S. (2026). Using Machine Learning Approaches for Predicting Time of Death of Human Postmortem Samples Based on Transcriptomic Data.      
+## Why this project exists
+
+Gene expression follows circadian (24-hour) rhythms, so a transcriptomic sample carries a timestamp — but most public genomic datasets never record time of death. If expression alone can recover TOD, it unlocks timestamping for the many datasets that lack it, and matters forensically and clinically (e.g., drug-timing research). Circadian genes are sinusoidal, so a single expression value is ambiguous (ascending vs descending slope): the paper's core idea was to encode short *windows* of neighbouring samples with an autoencoder before regression.
+
+## Dataset
+
+| | |
+|---|---|
+| Source | Chen et al. 2016, PNAS 113(1):206–211 — [DOI 10.1073/pnas.1508249112](https://doi.org/10.1073/pnas.1508249112) · GEO [GSE71620](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE71620) |
+| Subjects | 146 donors (mean age 50.7, range 16–96; 75% male; 85% Caucasian — as described in the paper); 292 samples = 2 brain regions × 146 |
+| Regions | BA11 and BA47 (orbital prefrontal cortex), modeled independently |
+| Features | 235 circadian genes (selected in the source study) + Age + Sex |
+| Target | Time of death, in hours (`TOD` ∈ [0, 24]) |
+| In this repo | `data/raw/` (phenotype, gene-selection table) and `data/processed/` (one row = one donor sample) — provenance, checksums, and ethics: [docs/DATA.md](docs/DATA.md) |
+
+## Published pipeline (as in the paper)
+
+```mermaid
+flowchart TD
+    A[GEO GSE71620<br/>146 donors · 2 brain regions] --> B[Divide by region<br/>BA11 / BA47]
+    B --> C[Sort by TOD ·<br/>2-hour ZT bins]
+    C --> D[Train/Test split<br/>60/70/80% per bin]
+    D --> E[Normalise<br/>min-max or log]
+    E --> F[Stage 1: sliding windows<br/>sizes 1/2/3 → AutoEncoder<br/>1-D latent per window]
+    F --> G[Stage 2: dimensionality reduction<br/>PCA / ICA / KPCA / ISOMAP<br/>90% or 95% variance]
+    G --> H[16 regressors<br/>randomised search, 5-fold CV]
+    H --> I[Score every configuration<br/>on the same test set]
+    I --> J[Rank & select best<br/>paper Algorithm 1]
 ```
+
+The published study evaluated **16 regressors** across three input branches — non-windowed, CNN-windowed, and autoencoder-windowed — for a total of 730 + 2,304 + 2,304 pipeline-model candidates (paper §4.3):
+
+| Category (5/8/3) | Models |
+|---|---|
+| Single | Linear, SVR, Decision Tree, K-Neighbors, SGD |
+| Ensemble | Voting, Stacking, Gradient Boosting, Random Forest, AdaBoost, Bagging, Extra Trees, XGBoost |
+| Deep learning | MLP, LSTM, CNN (PyTorch via skorch; CNN-variant scripts in TensorFlow) |
+
+## Results **as reported in the paper**
+
+Paper Table 2 (hourly scale; PDF p. 11 / proceedings p. 714), transcribed in
+[`src/tod_pred/authoritative.py`](src/tod_pred/authoritative.py) and checkable via
+`python scripts/verify_results.py --check-paper`:
+
+| Approach | Best model (BA11) | MAE (h) | StdErr | Best model (BA47) | MAE (h) | StdErr |
+|---|---|---|---|---|---|---|
+| Non-temporal encoding | LSTM (PCA-90, MM-80) | 2.425* | 3.077 | LSTM (PCA-90, MM-80) | 3.274 | 3.823 |
+| Temporal encoding via CNN | Bagging (PCA-90, MM-70, w3) | 0.945 | 1.107 | AdaBoost (KPCA-95, log-80, w3) | 1.757 | 2.201 |
+| **Temporal encoding via AutoEncoder (paper's method)** | **Extra Trees** (ISOMAP-90, MM-80, w3) | **0.839** | 0.996 | **AdaBoost** (PCA-95, MM-70, w3) | **1.227** | 1.451 |
+
+Full hourly-scale rows (MSE 1.013/2.153, RMSE 1.006/1.467 for the paper's method; MAPE/sMAPE) are in the paper PDF. \* Shown as 2.424 on the poster and in the pre-2026 README; the paper's table reads 2.425 (rounding of the same value). The same models' metrics on the *normalised* target scale are in paper Table 1 (p. 10) — do not mix the two scales when comparing; the best normalized-scale rows are also recoverable from the tracked experiment sheets (`python scripts/verify_results.py`).
+
+## ⚠️ Validation caveats — read before quoting the numbers
+
+A 2026 engineering audit of the pipeline ([docs/LIMITATIONS.md](docs/LIMITATIONS.md), with file/line evidence) confirmed:
+
+1. **Windows span different subjects, sorted by the target.** Each row is one donor; "temporal windows" therefore contain *other donors* chosen by proximity of their TOD — the target leaks into features by construction. This is documented design in the paper (a "pseudo-multivariate time series"), but it plausibly drives most of the reported gain.
+2. **Model & pipeline selection used the reported test set.** Thousands of configurations were ranked on the same test set that produced the headline numbers (no nested CV, no untouched holdout).
+3. The train/test split is positional within TOD bins, so splits are not exchangeable samples.
+4. Additional defects: ICA 90/95 outputs mislabelled; FastICA unseeded; option-1 features not regenerable from the repo; Excel-cell-scraped results.
+
+Consequently the published MAEs are **optimistic lower bounds**, not expected accuracy. No external validation, clinical use, or production deployment is claimed or implied.
+
+## Leakage-free re-analysis (new, 2026 — not from the paper)
+
+[`src/tod_pred/`](src/tod_pred/) implements a clean protocol: no windows, no target-informed ordering, all preprocessing fitted inside training folds, model selection by **nested** cross-validation (inner randomised search), deterministic seed 42:
+
+| Model | BA11 MAE (h), mean ± SD | BA47 MAE (h), mean ± SD |
+|---|---|---|
+| Mean baseline | 4.881 ± 0.318 | 4.881 ± 0.318 |
+| **Ridge (best)** | **3.683 ± 0.544** | **4.044 ± 0.151** |
+| RandomForest / ExtraTrees / AdaBoost / HistGB | 3.82–4.08 | 4.08–4.24 |
+
+```bash
+python scripts/run_nested_cv.py --region BA11   # ~90 s, CPU; writes results/leakage_free/
+python scripts/run_nested_cv.py --region BA47
+```
+
+These results are **worse than the paper's** and are labelled as new everywhere they appear. They show that with the leakage removed, standard regressors on this dataset reach ≈3.7–4 h MAE — modestly better than predicting the mean. They do not retroactively re-evaluate the paper's models; see [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+
+## Setup & usage
+
+```bash
+git clone https://github.com/oleeveeuh/gr-WPI-UMASS-TOD-Prediction.git
+cd gr-WPI-UMASS-TOD-Prediction
+python -m venv .venv && source .venv/bin/activate   # Python >= 3.10
+pip install -e .[dev]
+
+pytest -m "not slow"                                # unit tests (seconds)
+python scripts/run_nested_cv.py --region BA11       # leakage-free workflow (CPU)
+python scripts/verify_results.py --check-paper      # verify published-number transcription
+python scripts/download_data.py                     # re-fetch/verify public source data
+```
+
+The archived, as-published pipeline lives in [`research_archive/`](research_archive/) (Python 3.10-only pins, see its README). Reproducibility details: [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md).
+
+## Repository structure
+
+```
+├── src/tod_pred/          # maintained leakage-free workflow (scikit-learn, CPU-only)
+├── scripts/               # run_nested_cv / verify_results / download_data
+├── configs/               # nested-CV configs per region
+├── tests/                 # pytest suite (synthetic fixtures only)
+├── docs/                  # LIMITATIONS · DATA · REPRODUCIBILITY (+ poster preview)
+├── data/
+│   ├── raw/               # public source files (GEO phenotype, PNAS S1)
+│   └── processed/         # wrangled per-region datasets (1 row = 1 donor sample)
+├── results/
+│   ├── publication/       # paper PDF + poster PDF
+│   ├── figures/           # paper-era prediction plots
+│   ├── sheets/            # 21 historical per-configuration Excel result workbooks
+│   ├── derived/           # tidy CSV scrapes of the sheets
+│   └── leakage_free/      # NEW nested-CV outputs (labelled, not paper results)
+└── research_archive/      # as-published pipeline (R + PyTorch/TF), preserved
+```
+
+## Data access & ethics
+
+All donor data here is secondary use of the public, deidentified GEO dataset GSE71620 (originally collected under University of Pittsburgh IRB approval with next-of-kin consent — see [docs/DATA.md](docs/DATA.md)). Donors are numeric IDs only; no re-identification attempts belong anywhere near this data. One file (`data/raw/cause_of_death.csv`) has undocumented provenance and is flagged there.
+
+## Future work
+
+From the paper's conclusions plus this audit: probabilistic models that represent uncertainty; validation on additional circadian-expression datasets and tissues; leakage-free re-design of the sequentiality pipeline (subject-grouped CV, honest holdouts); confirming the provenance of `cause_of_death.csv`; larger-window autoencoder variants under clean validation.
+
+## Team
+
+**Authors (as published):** Olivia Liau (USC) · Tillie Slosser (Smith College) · Ivan Betancourt (Amherst College) · Qiaochu Liu (WPI) · Chun-Kit Ngan (WPI) · Chen Fu (UMass Chan) · Ryan W. Logan (UMass Chan) · Nitya Phani Santosh Oruganty (WPI)
+
+**Mentors & advisors:** Dr. Chun-Kit Ngan, Dr. Chen Fu (advisors), Qiaochu Liu, Deep Suchak, Ryan W. Logan, Nitya Phani Santosh Oruganty
+
+**Funding:** NSF REU Site Grant 2349370 — *Applied Artificial Intelligence for Advanced Applications (2024–2026)*. Any opinions, findings, and conclusions are the authors' and do not reflect NSF's views.
+
+<details>
+<summary><strong>My contributions</strong> (Olivia Liau — individual work, distinct from the team's)</summary>
+
+Team accomplishments are listed above and authorship reflects the whole group. Within the project, my individual contributions were:
+
+- **Python modeling pipeline** — shared training/evaluation infrastructure (`read_train.py`, `model_definitions.py`), the option_1/2/3 model runners, and the dimensionality-reduction scripts (`DR_code/`), including the PyTorch AutoEncoder/CNN/LSTM model definitions.
+- **Results & visuals** — aggregating model results into the performance workbooks, scraping/ranking them (`find_best_models.py`), and producing the result figures and visual reports.
+- **Paper & documentation** — writing and revising the BIOINFORMATICS 2026 paper, and repository curation/documentation (this cleanup included).
+
+The R data-wrangling steps (`data_combining.R`, `train_test_splitting.R`) were led by collaborators; the 2026 leakage audit and the new `src/tod_pred/` workflow are post-publication engineering work by me.
+</details>
+
+## License
+
+Three separate layers: **code** — MIT ([LICENSE](LICENSE)); **paper** — CC BY-NC-ND 4.0 via SciTePress; **data** — per GEO/PNAS terms, cite Chen et al. 2016. See [docs/DATA.md](docs/DATA.md).
+
+## Citation
+
+```bibtex
+@InProceedings{liau2026tod,
+  author    = {Olivia Liau and Tillie Slosser and Ivan Betancourt and Qiaochu Liu and
+               Chun-Kit Ngan and Chen Fu and Ryan W. Logan and Nitya Phani Santosh Oruganty},
+  title     = {Using Machine Learning Approaches for Predicting Time of Death of Human
+               Postmortem Samples Based on Transcriptomic Data},
+  booktitle = {Proceedings of the 19th International Joint Conference on Biomedical
+               Engineering Systems and Technologies (BIOSTEC) -- Volume 2: BIOINFORMATICS},
+  pages     = {704--715},
+  year      = {2026},
+  publisher = {SciTePress},
+  doi       = {10.5220/0014636000004070}
+}
+```
+
+**Key references:** Chen, C.-Y., et al. (2016). Effects of aging on circadian patterns of gene expression in the human prefrontal cortex. *PNAS* 113(1):206–211, [doi:10.1073/pnas.1508249112](https://doi.org/10.1073/pnas.1508249112) (dataset) · Xue, X., et al. (2022). Molecular rhythm alterations in prefrontal cortex and nucleus accumbens associated with opioid use disorder. *Translational Psychiatry* 12:389, [doi:10.1038/s41398-022-01845-y](https://doi.org/10.1038/s41398-022-01845-y) · full reference list in the [paper PDF](results/publication/BIOINFORMATICS_2026_398_CR.pdf).

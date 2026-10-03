@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tod-prediction"
+version = "0.1.0"
+description = "Leakage-free reference workflow for predicting time of death from circadian gene expression (BIOINFORMATICS 2026)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Olivia Liau" },
+    { name = "Tillie Slosser" },
+    { name = "Ivan Betancourt" },
+    { name = "Qiaochu Liu" },
+    { name = "Chun-Kit Ngan" },
+    { name = "Chen Fu" },
+    { name = "Ryan W. Logan" },
+    { name = "Nitya Phani Santosh Oruganty" },
+]
+keywords = [
+    "bioinformatics", "transcriptomics", "circadian-rhythms",
+    "machine-learning", "gene-expression", "time-of-death",
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+dependencies = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "openpyxl>=3.1",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "slow: end-to-end smoke tests (a few minutes; deselect with '-m \"not slow\"')",
+]
+
+[tool.ruff]
+line-length = 100
+# The historical pipeline under research_archive/ is preserved as published;
+# lint only the maintained code.
+extend-exclude = ["research_archive"]

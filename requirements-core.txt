@@ -1,0 +1,9 @@
+# Core dependencies for the maintained leakage-free workflow (src/tod_pred, scripts/, tests/).
+# Supported Python: >= 3.10 (CI runs 3.10 and 3.13).
+numpy>=1.24
+pandas>=2.0
+scikit-learn>=1.3
+openpyxl>=3.1
+PyYAML>=6.0
+tqdm>=4.60
+pytest>=7.4

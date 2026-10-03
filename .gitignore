@@ -1,11 +1,45 @@
+# --- OS / editor junk ---
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# --- R ---
 .Rproj.user
 .Rhistory
 .RData
 .Ruserdata
-# Ignore Python bytecode files
+*.Rproj.loc
+
+# --- Python ---
+__pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+.venv*/
+venv/
 
-# Ignore __pycache__ directories
-__pycache__/
+# --- Generated / regenerable data (see data/README.md and docs/DATA.md) ---
 data/program_output/
+data/train_test_split_data/
+data/window/
+data/encoded/
+data/reduced_data/
+data/reduced_encoded/
+data/reduced_CNN/
+data/reduced_CNN_flatten/
+data/w1_conv_dense/
+data/w2_conv_dense/
+data/w3_conv_dense/
+data/flatten_w1_conv/
+data/flatten_w2_conv/
+data/flatten_w3_conv/
+
+# Large re-downloadable annotation file (see scripts/download_data.py)
+data/raw/gene_names.*
+
+# --- Generated reports / figures ---
+best_model_visuals.html
+results/figures/*_multi_plot.png

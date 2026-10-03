@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: >-
+  If you use this work, please cite both the paper (below) and this software
+  repository.
+title: >-
+  Using Machine Learning Approaches for Predicting Time of Death of Human
+  Postmortem Samples Based on Transcriptomic Data
+authors:
+  - given-names: Olivia
+    family-names: Liau
+  - given-names: Tillie
+    family-names: Slosser
+  - given-names: Ivan
+    family-names: Betancourt
+  - given-names: Qiaochu
+    family-names: Liu
+  - given-names: Chun-Kit
+    family-names: Ngan
+  - given-names: Chen
+    family-names: Fu
+  - given-names: Ryan W.
+    family-names: Logan
+  - given-names: Nitya Phani Santosh
+    family-names: Oruganty
+type: proceedings
+conference:
+  name: >-
+    19th International Joint Conference on Biomedical Engineering Systems and
+    Technologies (BIOSTEC) - Volume 2: BIOINFORMATICS
+  place: Marbella, Spain
+publisher:
+  name: SciTePress
+year: 2026
+pages: 704-715
+doi: 10.5220/0014636000004070
+url: https://www.scitepress.org/Papers/2026/146360/
+keywords:
+  - transcriptomics
+  - gene expression
+  - circadian rhythms
+  - machine learning
+  - autoencoder
+  - dimensionality reduction
+license: CC-BY-NC-ND-4.0

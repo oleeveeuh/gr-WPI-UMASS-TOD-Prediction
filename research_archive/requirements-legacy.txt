@@ -1,0 +1,29 @@
+# Historical dependency pins for the AS-PUBLISHED pipeline in this archive.
+# ---------------------------------------------------------------- them ---
+# These pins are preserved for provenance.  They are NOT installable as-is:
+#
+#   torch==2.1.1+cu121   The "+cu121" local version only exists on PyTorch's
+#                        CUDA wheel index (not PyPI), and only for Linux
+#                        x86_64 — plain `pip install` fails, including on the
+#                        macOS machine this research was developed on.  Use
+#                        `torch==2.1.1` if you need a CPU-only rebuild.
+#   tensorflow==2.10.0   No Apple-Silicon (arm64) wheels; Python 3.7-3.10 only.
+#   pandas==1.4.4 /      Wheels exist only for Python 3.8-3.10; Python 3.11+
+#   scikit-learn==1.1.2  needs newer releases (which also reject some historic
+#                        grid values used by these scripts, e.g. criterion="mse",
+#                        max_features="auto", loss="squared_loss").
+#
+# Net effect: the archive is reproducible only on Python 3.10, x86_64, and is
+# NOT guaranteed to run unmodified.  It is kept for transparency, not use.
+# The maintained workflow at the repository root has its own core
+# dependencies (requirements-core.txt) and runs on Python >= 3.10, any platform.
+# ------------------------------------------------------------------------------ pins ----
+numpy==1.24.0
+openpyxl==3.0.10
+pandas==1.4.4
+scikit_learn==1.1.2
+skorch==1.0.0
+tensorflow==2.10.0
+torch==2.1.1+cu121
+tqdm==4.66.2
+xgboost==2.1.0

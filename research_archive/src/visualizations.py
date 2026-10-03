@@ -200,7 +200,9 @@ paths = {
 
 }
 
-path = ("/Users/olivialiau/Downloads/gr-WPI-UMASS-TOD-Project/data/train_test_split_data/BA11")
+# 2026 portability fix: was an absolute path on the original author's machine; now repo-relative.
+# The train/test split CSVs are regenerable via the archived pipeline (research_archive/train_test_splitting.R).
+path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "train_test_split_data", "BA11"))
 original_data_60 = pd.read_csv(f"{path}/BA11_60_nonnormalized_train.csv")
 original_data_70 = pd.read_csv(f"{path}/BA11_70_nonnormalized_train.csv")
 original_data_80 = pd.read_csv(f"{path}/BA11_80_nonnormalized_train.csv")

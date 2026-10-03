@@ -10,8 +10,9 @@ import os
 windows = ['window1', 'window2', 'window3']#,'None', ]
 variances = [90, 95]
 #95 for window2
-# path = (r"/Users/olivialiau/Downloads/gr-WPI-UMASS-TOD-Project/data/encoded")
-path = (r"/Users/olivialiau/Downloads")
+# 2026 portability fix: was an absolute path on the original author's machine; now repo-relative.
+# The encoded-window CSVs are regenerable via the archived pipeline (research_archive/src/option_2/encode_windows.py).
+path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "encoded"))
 
 # Parameter grid for KPCA
 kernels = ['poly']
@@ -150,7 +151,8 @@ for window in windows:
             finaltraindf['TOD'] = df['TOD']
             finaltestdf['TOD'] = df2['TOD']
 
-            out_directory = (r"/Users/olivialiau/Downloads/OPT3_Flatten_KPCA/")
+            # 2026 portability fix: was an absolute path on the original author's machine; now repo-relative.
+            out_directory = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data", "program_output", "OPT3_Flatten_KPCA"))
             os.makedirs(out_directory, exist_ok=True)
 
             if window == 'None':

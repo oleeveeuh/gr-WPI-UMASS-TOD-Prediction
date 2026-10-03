@@ -9,7 +9,9 @@ from read_train import *
 import pandas as pd
 import glob
 
-saved_output_dir = 'data\program_output\*.csv'
+# 2026 portability fix: the original string used backslashes ('data\program_output\*.csv'),
+# which are not path separators on POSIX systems, so the glob never matched.
+saved_output_dir = os.path.join('data', 'program_output', '*.csv')
 
 # List all CSV files in the folder
 csv_files = glob.glob(saved_output_dir)
